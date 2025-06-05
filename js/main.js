@@ -15,21 +15,19 @@
     along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
-// Uhr
-function updateClock() {
-    const now = new Date();
-    const pad = n => n.toString().padStart(2, '0');
-    const clock = document.getElementById('clock');
-    if (clock) {
-        clock.textContent =
-            pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-    }
+// Hilfsfunktionen
+function calcAge(birthdate) {
+    if (!birthdate) return '';
+    const bd = new Date(birthdate);
+    if (isNaN(bd)) return '';
+    const today = new Date();
+    let age = today.getFullYear() - bd.getFullYear();
+    const m = today.getMonth() - bd.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+    return age;
 }
-setInterval(updateClock, 1000);
-updateClock();
 
-// Profil-Handling
-let currentProfile = null;
+// DOM-Elemente
 const profileStatus = document.getElementById('profileStatus');
 const loadBtn = document.getElementById('loadProfileBtn');
 const saveBtn = document.getElementById('saveProfileBtn');
@@ -41,8 +39,17 @@ const profileForm = document.getElementById('profileForm');
 const profileDataSection = document.getElementById('profileDataSection');
 const profileDataView = document.getElementById('profileDataView');
 const editProfileBtn = document.getElementById('editProfileBtn');
+const passwordModal = document.getElementById('passwordModal');
+const closePasswordModal = document.getElementById('closePasswordModal');
+const passwordForm = document.getElementById('passwordForm');
+const passwordInput = document.getElementById('passwordInput');
+const passwordModalTitle = document.getElementById('passwordModalTitle');
+const passwordError = document.getElementById('passwordError');
 
-// Einfache AES-GCM Verschlüsselung/Entschlüsselung mit Web Crypto API (ohne Drittanbieter-Bibliotheken)
+let currentProfile = null;
+let isEditMode = false;
+
+// AES-GCM Verschlüsselung/Entschlüsselung
 async function encryptProfile(profileObj, password) {
     const enc = new TextEncoder();
     const salt = window.crypto.getRandomValues(new Uint8Array(16));
@@ -66,7 +73,6 @@ async function encryptProfile(profileObj, password) {
     const ciphertext = new Uint8Array(await window.crypto.subtle.encrypt(
         { name: "AES-GCM", iv: iv }, key, data
     ));
-    // Datei enthält: salt + iv + ciphertext (alles base64)
     return btoa(String.fromCharCode(...salt) + String.fromCharCode(...iv) + String.fromCharCode(...ciphertext));
 }
 
@@ -102,19 +108,7 @@ async function decryptProfile(ciphertextB64, password) {
     }
 }
 
-// Hilfsfunktion: Alter berechnen
-function calcAge(birthdate) {
-    if (!birthdate) return '';
-    const bd = new Date(birthdate);
-    if (isNaN(bd)) return '';
-    const today = new Date();
-    let age = today.getFullYear() - bd.getFullYear();
-    const m = today.getMonth() - bd.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
-    return age;
-}
-
-// Zeigt die Profildaten an
+// Profildaten anzeigen
 function showProfileData() {
     if (!currentProfile) {
         profileDataSection.style.display = "none";
@@ -134,60 +128,59 @@ function showProfileData() {
     profileDataSection.style.display = "block";
 }
 
-// Nach Profil-Laden oder -Erstellen anzeigen
+// UI aktualisieren
 function updateProfileUI() {
     profileStatus.textContent = `Profil: ${currentProfile.vorname || currentProfile.name || 'Unbenannt'}`;
     saveBtn.disabled = false;
     showProfileData();
 }
 
-// Editieren: Profilmaske mit aktuellen Werten öffnen
-if (editProfileBtn && profileForm && profileModal) {
-    editProfileBtn.onclick = () => {
+// Modal-Handling für Profil
+function openProfileModal(editMode = false) {
+    isEditMode = editMode;
+    if (editMode && currentProfile) {
+        // Felder mit aktuellen Werten füllen
         for (const el of profileForm.elements) {
             if (el.name && currentProfile[el.name] !== undefined) {
                 el.value = currentProfile[el.name];
             }
         }
-        profileModal.style.display = 'flex';
-    };
+    } else {
+        profileForm.reset();
+    }
+    profileModal.style.display = 'flex';
+}
+function closeProfileModalFunc() {
+    profileModal.style.display = 'none';
 }
 
-// Nach dem Speichern/Erstellen aktualisieren
-if (createBtn && profileModal && closeProfileModal && profileForm) {
-    createBtn.onclick = () => {
-        profileForm.reset();
-        profileModal.style.display = 'flex';
-    };
-    closeProfileModal.onclick = () => {
-        profileModal.style.display = 'none';
-    };
-    window.onclick = (event) => {
-        if (event.target === profileModal) profileModal.style.display = 'none';
-    };
+// Event-Handler für Profil erstellen/bearbeiten
+if (createBtn) {
+    createBtn.onclick = () => openProfileModal(false);
+}
+if (editProfileBtn) {
+    editProfileBtn.onclick = () => openProfileModal(true);
+}
+if (closeProfileModal) {
+    closeProfileModal.onclick = closeProfileModalFunc;
+}
+
+// Formular absenden (Erstellen oder Bearbeiten)
+if (profileForm) {
     profileForm.onsubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(profileForm);
-        currentProfile = {};
+        if (!currentProfile || !isEditMode) currentProfile = {};
         for (const [key, value] of formData.entries()) {
             currentProfile[key] = value;
         }
         updateProfileUI();
-        profileModal.style.display = 'none';
+        closeProfileModalFunc();
     };
 }
 
-// Passwort-Modal-Logik
-const passwordModal = document.getElementById('passwordModal');
-const closePasswordModal = document.getElementById('closePasswordModal');
-const passwordForm = document.getElementById('passwordForm');
-const passwordInput = document.getElementById('passwordInput');
-const passwordModalTitle = document.getElementById('passwordModalTitle');
-const passwordError = document.getElementById('passwordError');
-
+// Modal-Handling für Passwort
 let passwordResolve = null;
-let passwordPurpose = null;
-
 function askPassword(title) {
     passwordModalTitle.textContent = title;
     passwordInput.value = '';
@@ -196,19 +189,31 @@ function askPassword(title) {
     passwordInput.focus();
     return new Promise(resolve => {
         passwordResolve = resolve;
-        passwordPurpose = title;
     });
 }
+if (closePasswordModal) {
+    closePasswordModal.onclick = () => {
+        passwordModal.style.display = 'none';
+        if (passwordResolve) passwordResolve(null);
+    };
+}
+if (passwordForm) {
+    passwordForm.onsubmit = e => {
+        e.preventDefault();
+        passwordModal.style.display = 'none';
+        if (passwordResolve) passwordResolve(passwordInput.value);
+    };
+}
 
-closePasswordModal.onclick = () => {
-    passwordModal.style.display = 'none';
-    if (passwordResolve) passwordResolve(null);
-};
-
-passwordForm.onsubmit = e => {
-    e.preventDefault();
-    passwordModal.style.display = 'none';
-    if (passwordResolve) passwordResolve(passwordInput.value);
+// Modal-Schließen nur bei Klick außerhalb
+window.onclick = (event) => {
+    if (profileModal && profileModal.style.display === 'flex' && event.target === profileModal) {
+        profileModal.style.display = 'none';
+    }
+    if (passwordModal && passwordModal.style.display === 'flex' && event.target === passwordModal) {
+        passwordModal.style.display = 'none';
+        if (passwordResolve) passwordResolve(null);
+    }
 };
 
 // Profil laden/speichern mit Passwort-Modal
@@ -247,36 +252,15 @@ if (loadBtn && loader && saveBtn && profileStatus) {
     };
 }
 
-// Nur EINEN Handler für "Daten bearbeiten"
-if (editProfileBtn && profileForm && profileModal) {
-    editProfileBtn.onclick = (e) => {
-        // Fülle das Formular mit aktuellen Profildaten
-        for (const el of profileForm.elements) {
-            if (el.name && currentProfile[el.name] !== undefined) {
-                el.value = currentProfile[el.name];
-            }
-        }
-        profileModal.style.display = 'flex';
-    };
+// Uhr (wie gehabt)
+function updateClock() {
+    const now = new Date();
+    const pad = n => n.toString().padStart(2, '0');
+    const clock = document.getElementById('clock');
+    if (clock) {
+        clock.textContent =
+            pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+    }
 }
-
-// window.onclick so anpassen, dass nur bei Klick außerhalb geschlossen wird
-window.onclick = (event) => {
-    // Profile-Modal schließen, nur wenn außerhalb geklickt
-    if (
-        profileModal &&
-        profileModal.style.display === 'flex' &&
-        event.target === profileModal
-    ) {
-        profileModal.style.display = 'none';
-    }
-    // Passwort-Modal schließen, nur wenn außerhalb geklickt
-    if (
-        passwordModal &&
-        passwordModal.style.display === 'flex' &&
-        event.target === passwordModal
-    ) {
-        passwordModal.style.display = 'none';
-        if (passwordResolve) passwordResolve(null);
-    }
-};
+setInterval(updateClock, 1000);
+updateClock();
