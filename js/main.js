@@ -561,6 +561,7 @@ if (addMedicalEntryBtn) {
     addMedicalEntryBtn.onclick = () => {
         isEditMode = false;
         medicalEntryForm.reset();
+        medicalEntryType.value = ""; // Typ zurücksetzen
         renderMedicalEntryFields('');
         medicalEntryModal.style.display = 'flex';
         setMedicalEntryFormSubmitHandler();
@@ -808,4 +809,10 @@ function renderMedicalEntryFields(type, values = {}) {
 
     html += `<label>Bild (optional): <input type="file" name="image" accept="image/*" id="medicalEntryImageInput"></label>`;
     medicalEntryDynamicFields.innerHTML = html;
+}
+
+if (medicalEntryType) {
+    medicalEntryType.onchange = () => {
+        renderMedicalEntryFields(medicalEntryType.value);
+    };
 }
