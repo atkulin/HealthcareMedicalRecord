@@ -46,6 +46,14 @@ const passwordInput = document.getElementById('passwordInput');
 const passwordModalTitle = document.getElementById('passwordModalTitle');
 const passwordError = document.getElementById('passwordError');
 
+// Medizinische Akte
+const medicalRecordSection = document.getElementById('medicalRecordSection');
+const addMedicalEntryBtn = document.getElementById('addMedicalEntryBtn');
+const medicalRecordList = document.getElementById('medicalRecordList');
+const medicalEntryModal = document.getElementById('medicalEntryModal');
+const closeMedicalEntryModal = document.getElementById('closeMedicalEntryModal');
+const medicalEntryForm = document.getElementById('medicalEntryForm');
+
 let currentProfile = null;
 let isEditMode = false;
 
@@ -128,11 +136,36 @@ function showProfileData() {
     profileDataSection.style.display = "block";
 }
 
+// Medizinische Akte anzeigen
+function showMedicalRecord() {
+    if (!currentProfile) {
+        medicalRecordSection.style.display = "none";
+        return;
+    }
+    medicalRecordSection.style.display = "block";
+    const entries = currentProfile.medicalRecord || [];
+    if (entries.length === 0) {
+        medicalRecordList.innerHTML = "<div style='color:#b2dfdb;text-align:center;'>Noch keine Einträge.</div>";
+        return;
+    }
+    medicalRecordList.innerHTML = entries.map(entry => `
+        <div class="medical-entry">
+            <div class="entry-header">
+                <span class="entry-type">${entry.type || ''}</span>
+                <span class="entry-date">${entry.date || ''}</span>
+            </div>
+            <div class="entry-title">${entry.title || ''}</div>
+            <div class="entry-description">${entry.description || ''}</div>
+        </div>
+    `).join('');
+}
+
 // UI aktualisieren
 function updateProfileUI() {
     profileStatus.textContent = `Profil: ${currentProfile.vorname || currentProfile.name || 'Unbenannt'}`;
     saveBtn.disabled = false;
     showProfileData();
+    showMedicalRecord();
 }
 
 // Modal-Handling für Profil
@@ -264,3 +297,39 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// Modal öffnen/schließen für medizinische Akte
+if (addMedicalEntryBtn) {
+    addMedicalEntryBtn.onclick = () => {
+        medicalEntryForm.reset();
+        medicalEntryModal.style.display = 'flex';
+    };
+}
+if (closeMedicalEntryModal) {
+    closeMedicalEntryModal.onclick = () => {
+        medicalEntryModal.style.display = 'none';
+    };
+}
+if (medicalEntryForm) {
+    medicalEntryForm.onsubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(medicalEntryForm);
+        const entry = {};
+        for (const [key, value] of formData.entries()) {
+            entry[key] = value;
+        }
+        if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+        currentProfile.medicalRecord.push(entry);
+        showMedicalRecord();
+        medicalEntryModal.style.display = 'none';
+        // Optional: direkt speichern aktivieren
+        saveBtn.disabled = false;
+    };
+}
+
+// Modal-Schließen bei Klick außerhalb für medizinische Akte
+window.addEventListener('click', (event) => {
+    if (medicalEntryModal && medicalEntryModal.style.display === 'flex' && event.target === medicalEntryModal) {
+        medicalEntryModal.style.display = 'none';
+    }
+});
