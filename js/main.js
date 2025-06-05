@@ -468,7 +468,88 @@ if (closeProfileModal) {
 
 async function askPassword(promptText) {
     return new Promise(resolve => {
-        const pw = window.prompt(promptText || "Bitte Passwort eingeben:");
-        resolve(pw);
+        passwordModalTitle.textContent = promptText || "Passwort";
+        passwordInput.value = "";
+        passwordError.style.display = "none";
+        passwordModal.style.display = "flex";
+        passwordInput.focus();
+
+        function cleanup() {
+            passwordModal.style.display = "none";
+            passwordForm.onsubmit = null;
+            closePasswordModal.onclick = null;
+        }
+
+        passwordForm.onsubmit = (e) => {
+            e.preventDefault();
+            cleanup();
+            resolve(passwordInput.value);
+        };
+        closePasswordModal.onclick = () => {
+            cleanup();
+            resolve(null);
+        };
+    });
+}
+
+// Profil erstellen Button
+if (createBtn) {
+    createBtn.onclick = () => {
+        isEditMode = false;
+        profileForm.reset();
+        profileModal.style.display = 'flex';
+    };
+}
+
+// Profil laden Button
+if (loadBtn && loader) {
+    loadBtn.onclick = () => {
+        loader.value = ""; // Reset file input
+        loader.click();
+    };
+}
+
+// Profil bearbeiten Button
+if (editProfileBtn) {
+    editProfileBtn.onclick = () => {
+        isEditMode = true;
+        // Felder mit aktuellen Profildaten füllen
+        for (const el of profileForm.elements) {
+            if (el.name && currentProfile && currentProfile[el.name] !== undefined) {
+                el.value = currentProfile[el.name];
+            }
+        }
+        profileModal.style.display = 'flex';
+    };
+}
+
+// Modal schließen
+if (closeProfileModal) {
+    closeProfileModal.onclick = closeProfileModalFunc;
+}
+
+async function askPassword(promptText) {
+    return new Promise(resolve => {
+        passwordModalTitle.textContent = promptText || "Passwort";
+        passwordInput.value = "";
+        passwordError.style.display = "none";
+        passwordModal.style.display = "flex";
+        passwordInput.focus();
+
+        function cleanup() {
+            passwordModal.style.display = "none";
+            passwordForm.onsubmit = null;
+            closePasswordModal.onclick = null;
+        }
+
+        passwordForm.onsubmit = (e) => {
+            e.preventDefault();
+            cleanup();
+            resolve(passwordInput.value);
+        };
+        closePasswordModal.onclick = () => {
+            cleanup();
+            resolve(null);
+        };
     });
 }
