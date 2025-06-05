@@ -239,8 +239,8 @@ a:hover {
     border-radius: 14px;
     box-shadow: 0 4px 24px rgba(20, 40, 30, 0.25);
     color: #e8f5e9;
-    min-width: 320px;
-    max-width: 95vw;
+    min-width: 350px;
+    max-width: 600px;
     position: relative;
     border-left: 6px solid #388e7c;
 }
@@ -347,4 +347,51 @@ a:hover {
     color: #e8f5e9;
     margin-bottom: 1rem;
     font-size: 1.1rem;
+}
+
+.modal-content form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    justify-content: space-between;
+}
+
+.modal-content label {
+    flex: 1 1 45%;
+    display: flex;
+    flex-direction: column;
+    margin: 0.3rem 0;
+    min-width: 180px;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+    font-size: 1rem;
+    padding: 0.35rem 0.5rem;
+}
+
+.modal-content textarea {
+    min-height: 40px;
+    resize: vertical;
+}
+
+@media (max-width: 600px) {
+    .modal-content form {
+        flex-direction: column;
+        gap: 0.5rem 0;
+    }
+    .modal-content label {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+.modal-content button[type="submit"] {
+    flex: 1 1 100%;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    padding: 0.6rem 0;
 }
