@@ -328,6 +328,9 @@ function showMedicalRecord() {
     });
 }
 
+// Nach dem Laden/Erstellen eines Profils:
+if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+
 // Hilfsfunktion: Untereinträge zu einer Diagnose anzeigen
 function renderDiagnosisSubentries(diagnoseEntry, diagnoseIdx) {
     const entries = currentProfile.medicalRecord || [];
@@ -368,4 +371,27 @@ function renderDiagnosisSubentries(diagnoseEntry, diagnoseIdx) {
             ${entry.notes ? `<div class="entry-notes"><b>Notizen:</b> ${entry.notes}</div>` : ''}
         </div>
     `).join('');
+}
+
+// Nach dem Absenden des Profil-Formulars (Erstellen oder Bearbeiten)
+if (profileForm) {
+    profileForm.onsubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(profileForm);
+        if (!currentProfile || !isEditMode) currentProfile = {};
+        for (const [key, value] of formData.entries()) {
+            currentProfile[key] = value;
+        }
+        // Sicherstellen, dass medicalRecord existiert
+        if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+        updateProfileUI();
+        closeProfileModalFunc();
+    };
+}
+
+function updateProfileUI() {
+    profileStatus.textContent = `Profil: ${currentProfile.vorname || currentProfile.name || 'Unbenannt'}`;
+    saveBtn.disabled = false;
+    showProfileData();
+    showMedicalRecord();
 }
