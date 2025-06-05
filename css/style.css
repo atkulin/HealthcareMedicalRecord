@@ -27,7 +27,7 @@ body {
 .top-bar {
     display: flex;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: center; /* vorher: flex-start */
     padding: 1.5rem 2rem 0 2rem;
     gap: 2rem;
 }
