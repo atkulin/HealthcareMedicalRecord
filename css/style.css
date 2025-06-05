@@ -480,3 +480,40 @@ a:hover {
     font-size: 0.98em;
     border-radius: 6px;
 }
+
+.diagnosis-group {
+    border: 2.5px solid #81c784;
+    margin-bottom: 1.5em;
+    background: #1b4e3b;
+}
+.diagnosis-header {
+    background: #225c4b;
+    border-radius: 8px 8px 0 0;
+    padding-bottom: 0.3em;
+}
+.diagnosis-group-content {
+    padding: 0.7em 0.5em 0.5em 0.5em;
+}
+.diagnosis-subentries .medical-entry.subentry {
+    background: #225c4b;
+    border-left: 3px solid #1de9b6;
+    margin-top: 0.7em;
+    margin-bottom: 0.2em;
+    border-radius: 6px;
+}
+.add-subentry-btn {
+    background: #388e7c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.3rem 1rem;
+    font-size: 0.98rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.2s;
+    font-weight: 500;
+}
+.add-subentry-btn:hover {
+    background: #1de9b6;
+    color: #153c2e;
+}
