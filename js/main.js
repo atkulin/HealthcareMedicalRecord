@@ -53,6 +53,22 @@ const medicalRecordList = document.getElementById('medicalRecordList');
 const medicalEntryModal = document.getElementById('medicalEntryModal');
 const closeMedicalEntryModal = document.getElementById('closeMedicalEntryModal');
 const medicalEntryForm = document.getElementById('medicalEntryForm');
+const medicalEntryType = document.getElementById('medicalEntryType');
+const medicalEntryDynamicFields = document.getElementById('medicalEntryDynamicFields');
+
+// Icons für die Anzeige in der Liste
+const medicalTypeIcons = {
+    "Symptom": "🩹",
+    "Diagnose": "🩺",
+    "Untersuchung": "🔬",
+    "Medikation": "💊",
+    "Impfung": "💉",
+    "Allergie": "🌿",
+    "Operation": "🏥",
+    "Befund": "📄",
+    "Laborwert": "🧪",
+    "Sonstiges": "🗂️"
+};
 
 let currentProfile = null;
 let isEditMode = false;
@@ -151,10 +167,20 @@ function showMedicalRecord() {
     medicalRecordList.innerHTML = entries.map(entry => `
         <div class="medical-entry">
             <div class="entry-header">
-                <span class="entry-type">${entry.type || ''}</span>
+                <span class="entry-type">${medicalTypeIcons[entry.type] || ''} ${entry.type || ''}</span>
                 <span class="entry-date">${entry.date || ''}</span>
             </div>
             <div class="entry-title">${entry.title || ''}</div>
+            ${
+                entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''
+            }
+            ${entry.dosage ? `<div class="entry-description"><b>Dosierung:</b> ${entry.dosage}</div>` : ''}
+            ${entry.frequency ? `<div class="entry-description"><b>Frequenz:</b> ${entry.frequency}</div>` : ''}
+            ${entry.icd ? `<div class="entry-description"><b>ICD-10:</b> ${entry.icd}</div>` : ''}
+            ${entry.batch ? `<div class="entry-description"><b>Charge:</b> ${entry.batch}</div>` : ''}
+            ${entry.reaction ? `<div class="entry-description"><b>Reaktion:</b> ${entry.reaction}</div>` : ''}
+            ${entry.result ? `<div class="entry-description"><b>Ergebnis:</b> ${entry.result}</div>` : ''}
+            ${entry.severity ? `<div class="entry-description"><b>Schweregrad:</b> ${entry.severity}</div>` : ''}
             <div class="entry-description">${entry.description || ''}</div>
         </div>
     `).join('');
@@ -302,6 +328,7 @@ updateClock();
 if (addMedicalEntryBtn) {
     addMedicalEntryBtn.onclick = () => {
         medicalEntryForm.reset();
+        renderMedicalEntryFields('');
         medicalEntryModal.style.display = 'flex';
     };
 }
@@ -310,6 +337,15 @@ if (closeMedicalEntryModal) {
         medicalEntryModal.style.display = 'none';
     };
 }
+
+// Modal-Schließen bei Klick außerhalb
+window.addEventListener('click', (event) => {
+    if (medicalEntryModal && medicalEntryModal.style.display === 'flex' && event.target === medicalEntryModal) {
+        medicalEntryModal.style.display = 'none';
+    }
+});
+
+// Eintrag speichern
 if (medicalEntryForm) {
     medicalEntryForm.onsubmit = (e) => {
         e.preventDefault();
@@ -322,12 +358,99 @@ if (medicalEntryForm) {
         currentProfile.medicalRecord.push(entry);
         showMedicalRecord();
         medicalEntryModal.style.display = 'none';
-        // Optional: direkt speichern aktivieren
         saveBtn.disabled = false;
     };
 }
 
-// Modal-Schließen bei Klick außerhalb für medizinische Akte
+// Dynamische Felder je nach Typ
+function renderMedicalEntryFields(type, values = {}) {
+    let html = '';
+    // Gemeinsame Felder
+    html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}" required></label>`;
+    switch (type) {
+        case "Symptom":
+            html += `<label>Symptom: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>
+                     <label>Schweregrad: 
+                        <select name="severity">
+                            <option value="">Bitte wählen</option>
+                            <option${values.severity==="leicht"?" selected":""}>leicht</option>
+                            <option${values.severity==="mittel"?" selected":""}>mittel</option>
+                            <option${values.severity==="schwer"?" selected":""}>schwer</option>
+                        </select>
+                     </label>`;
+            break;
+        case "Diagnose":
+            html += `<label>Diagnose: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>
+                     <label>ICD-10 Code: <input type="text" name="icd" value="${values.icd || ''}"></label>`;
+            break;
+        case "Untersuchung":
+            html += `<label>Untersuchung: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>
+                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>`;
+            break;
+        case "Medikation":
+            html += `<label>Medikament: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Dosierung: <input type="text" name="dosage" value="${values.dosage || ''}"></label>
+                     <label>Frequenz: <input type="text" name="frequency" value="${values.frequency || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Impfung":
+            html += `<label>Impfstoff: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Charge: <input type="text" name="batch" value="${values.batch || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Allergie":
+            html += `<label>Allergen: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Reaktion: <input type="text" name="reaction" value="${values.reaction || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Operation":
+            html += `<label>Operation: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>
+                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>`;
+            break;
+        case "Befund":
+            html += `<label>Befund: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Laborwert":
+            html += `<label>Laborwert: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Wert: <input type="text" name="value" value="${values.value || ''}" required></label>
+                     <label>Einheit: <input type="text" name="unit" value="${values.unit || ''}"></label>
+                     <label>Referenzbereich: <input type="text" name="reference" value="${values.reference || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        default: // Sonstiges
+            html += `<label>Titel: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+    }
+    medicalEntryDynamicFields.innerHTML = html;
+}
+
+// Typ-Auswahl steuert die Felder
+if (medicalEntryType) {
+    medicalEntryType.onchange = () => renderMedicalEntryFields(medicalEntryType.value);
+}
+
+// Modal öffnen: Felder zurücksetzen
+if (addMedicalEntryBtn) {
+    addMedicalEntryBtn.onclick = () => {
+        medicalEntryForm.reset();
+        renderMedicalEntryFields('');
+        medicalEntryModal.style.display = 'flex';
+    };
+}
+
+// Modal schließen
+if (closeMedicalEntryModal) {
+    closeMedicalEntryModal.onclick = () => {
+        medicalEntryModal.style.display = 'none';
+    };
+}
+
+// Modal-Schließen bei Klick außerhalb
 window.addEventListener('click', (event) => {
     if (medicalEntryModal && medicalEntryModal.style.display === 'flex' && event.target === medicalEntryModal) {
         medicalEntryModal.style.display = 'none';
