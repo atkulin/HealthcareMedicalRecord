@@ -716,7 +716,96 @@ function renderMedicalEntryFields(type, values = {}) {
     let html = '';
     html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}" required></label>`;
     html += `<label>Uhrzeit: <input type="time" name="time" value="${values.time || ''}" required></label>`;
-    // ... (weitere Felder wie bisher, siehe vorherige Antworten) ...
+
+    switch (type) {
+        case "Symptom":
+            html += `<label>Symptom: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Schweregrad: 
+                        <select name="severity">
+                            <option value="">Bitte wählen</option>
+                            <option${values.severity==="leicht"?" selected":""}>leicht</option>
+                            <option${values.severity==="mittel"?" selected":""}>mittel</option>
+                            <option${values.severity==="schwer"?" selected":""}>schwer</option>
+                        </select>
+                     </label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>`;
+            break;
+        case "Diagnose":
+            html += `<label>Diagnose: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>ICD-10 Code: <input type="text" name="icd" value="${values.icd || ''}"></label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>`;
+            break;
+        case "Untersuchung":
+            html += `<label>Untersuchung: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>`;
+            break;
+        case "Medikation":
+            html += `<label>Medikament: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Wirkstoff: <input type="text" name="substance" value="${values.substance || ''}"></label>
+                     <label>Dosierung: <input type="text" name="dosage" value="${values.dosage || ''}" required></label>
+                     <label>Frequenz: <input type="text" name="frequency" value="${values.frequency || ''}" required></label>
+                     <label>Verabreichungsweg: <input type="text" name="route" value="${values.route || ''}"></label>
+                     <label>Behandlungsdauer: <input type="text" name="duration" value="${values.duration || ''}"></label>
+                     <label>Grund: <input type="text" name="reason" value="${values.reason || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Impfung":
+            html += `<label>Impfstoff: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Charge: <input type="text" name="batch" value="${values.batch || ''}"></label>
+                     <label>Hersteller: <input type="text" name="manufacturer" value="${values.manufacturer || ''}"></label>
+                     <label>Impfstelle: <input type="text" name="location" value="${values.location || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Allergie":
+            html += `<label>Allergen: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Reaktion: <input type="text" name="reaction" value="${values.reaction || ''}"></label>
+                     <label>Schweregrad: 
+                        <select name="severity">
+                            <option value="">Bitte wählen</option>
+                            <option${values.severity==="leicht"?" selected":""}>leicht</option>
+                            <option${values.severity==="mittel"?" selected":""}>mittel</option>
+                            <option${values.severity==="schwer"?" selected":""}>schwer</option>
+                        </select>
+                     </label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Operation":
+            html += `<label>Operation: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
+                     <label>Chirurg: <input type="text" name="surgeon" value="${values.surgeon || ''}"></label>
+                     <label>Krankenhaus: <input type="text" name="hospital" value="${values.hospital || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Befund":
+            html += `<label>Befund: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Laborwert":
+            html += `<label>Laborwert: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Wert: <input type="text" name="value" value="${values.value || ''}" required></label>
+                     <label>Einheit: <input type="text" name="unit" value="${values.unit || ''}"></label>
+                     <label>Referenzbereich: <input type="text" name="reference" value="${values.reference || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Vitalwert":
+            html += `<label>Vitalwert: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Wert: <input type="text" name="value" value="${values.value || ''}" required></label>
+                     <label>Einheit: <input type="text" name="unit" value="${values.unit || ''}"></label>
+                     <label>Messmethode: <input type="text" name="method" value="${values.method || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Arztbesuch":
+            html += `<label>Arzt/Institution: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Grund: <input type="text" name="reason" value="${values.reason || ''}"></label>
+                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        default: // Sonstiges
+            html += `<label>Titel: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+    }
+
     html += `<label>Bild (optional): <input type="file" name="image" accept="image/*" id="medicalEntryImageInput"></label>`;
     medicalEntryDynamicFields.innerHTML = html;
 }
