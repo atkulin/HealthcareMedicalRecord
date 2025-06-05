@@ -168,19 +168,26 @@ function showMedicalRecord() {
         <div class="medical-entry">
             <div class="entry-header">
                 <span class="entry-type">${medicalTypeIcons[entry.type] || ''} ${entry.type || ''}</span>
-                <span class="entry-date">${entry.date || ''}</span>
+                <span class="entry-date">${entry.date || ''}${entry.time ? ' ' + entry.time : ''}</span>
             </div>
             <div class="entry-title">${entry.title || ''}</div>
-            ${
-                entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''
-            }
+            ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
             ${entry.dosage ? `<div class="entry-description"><b>Dosierung:</b> ${entry.dosage}</div>` : ''}
             ${entry.frequency ? `<div class="entry-description"><b>Frequenz:</b> ${entry.frequency}</div>` : ''}
             ${entry.icd ? `<div class="entry-description"><b>ICD-10:</b> ${entry.icd}</div>` : ''}
             ${entry.batch ? `<div class="entry-description"><b>Charge:</b> ${entry.batch}</div>` : ''}
+            ${entry.manufacturer ? `<div class="entry-description"><b>Hersteller:</b> ${entry.manufacturer}</div>` : ''}
+            ${entry.location ? `<div class="entry-description"><b>Impfstelle:</b> ${entry.location}</div>` : ''}
             ${entry.reaction ? `<div class="entry-description"><b>Reaktion:</b> ${entry.reaction}</div>` : ''}
             ${entry.result ? `<div class="entry-description"><b>Ergebnis:</b> ${entry.result}</div>` : ''}
             ${entry.severity ? `<div class="entry-description"><b>Schweregrad:</b> ${entry.severity}</div>` : ''}
+            ${entry.substance ? `<div class="entry-description"><b>Wirkstoff:</b> ${entry.substance}</div>` : ''}
+            ${entry.route ? `<div class="entry-description"><b>Verabreichungsweg:</b> ${entry.route}</div>` : ''}
+            ${entry.duration ? `<div class="entry-description"><b>Behandlungsdauer:</b> ${entry.duration}</div>` : ''}
+            ${entry.reason ? `<div class="entry-description"><b>Grund:</b> ${entry.reason}</div>` : ''}
+            ${entry.surgeon ? `<div class="entry-description"><b>Chirurg:</b> ${entry.surgeon}</div>` : ''}
+            ${entry.hospital ? `<div class="entry-description"><b>Krankenhaus:</b> ${entry.hospital}</div>` : ''}
+            ${entry.method ? `<div class="entry-description"><b>Messmethode:</b> ${entry.method}</div>` : ''}
             <div class="entry-description">${entry.description || ''}</div>
         </div>
     `).join('');
@@ -365,12 +372,13 @@ if (medicalEntryForm) {
 // Dynamische Felder je nach Typ
 function renderMedicalEntryFields(type, values = {}) {
     let html = '';
-    // Gemeinsame Felder
+    // Datum & Uhrzeit immer
     html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}" required></label>`;
+    html += `<label>Uhrzeit: <input type="time" name="time" value="${values.time || ''}" required></label>`;
+
     switch (type) {
         case "Symptom":
             html += `<label>Symptom: <input type="text" name="title" value="${values.title || ''}" required></label>
-                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>
                      <label>Schweregrad: 
                         <select name="severity">
                             <option value="">Bitte wählen</option>
@@ -378,38 +386,55 @@ function renderMedicalEntryFields(type, values = {}) {
                             <option${values.severity==="mittel"?" selected":""}>mittel</option>
                             <option${values.severity==="schwer"?" selected":""}>schwer</option>
                         </select>
-                     </label>`;
+                     </label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>`;
             break;
         case "Diagnose":
             html += `<label>Diagnose: <input type="text" name="title" value="${values.title || ''}" required></label>
-                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>
-                     <label>ICD-10 Code: <input type="text" name="icd" value="${values.icd || ''}"></label>`;
+                     <label>ICD-10 Code: <input type="text" name="icd" value="${values.icd || ''}"></label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>`;
             break;
         case "Untersuchung":
             html += `<label>Untersuchung: <input type="text" name="title" value="${values.title || ''}" required></label>
-                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>
-                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>`;
+                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
+                     <label>Beschreibung: <textarea name="description" required>${values.description || ''}</textarea></label>`;
             break;
         case "Medikation":
             html += `<label>Medikament: <input type="text" name="title" value="${values.title || ''}" required></label>
-                     <label>Dosierung: <input type="text" name="dosage" value="${values.dosage || ''}"></label>
-                     <label>Frequenz: <input type="text" name="frequency" value="${values.frequency || ''}"></label>
+                     <label>Wirkstoff: <input type="text" name="substance" value="${values.substance || ''}"></label>
+                     <label>Dosierung: <input type="text" name="dosage" value="${values.dosage || ''}" required></label>
+                     <label>Frequenz: <input type="text" name="frequency" value="${values.frequency || ''}" required></label>
+                     <label>Verabreichungsweg: <input type="text" name="route" value="${values.route || ''}"></label>
+                     <label>Behandlungsdauer: <input type="text" name="duration" value="${values.duration || ''}"></label>
+                     <label>Grund: <input type="text" name="reason" value="${values.reason || ''}"></label>
                      <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
             break;
         case "Impfung":
             html += `<label>Impfstoff: <input type="text" name="title" value="${values.title || ''}" required></label>
                      <label>Charge: <input type="text" name="batch" value="${values.batch || ''}"></label>
+                     <label>Hersteller: <input type="text" name="manufacturer" value="${values.manufacturer || ''}"></label>
+                     <label>Impfstelle: <input type="text" name="location" value="${values.location || ''}"></label>
                      <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
             break;
         case "Allergie":
             html += `<label>Allergen: <input type="text" name="title" value="${values.title || ''}" required></label>
                      <label>Reaktion: <input type="text" name="reaction" value="${values.reaction || ''}"></label>
+                     <label>Schweregrad: 
+                        <select name="severity">
+                            <option value="">Bitte wählen</option>
+                            <option${values.severity==="leicht"?" selected":""}>leicht</option>
+                            <option${values.severity==="mittel"?" selected":""}>mittel</option>
+                            <option${values.severity==="schwer"?" selected":""}>schwer</option>
+                        </select>
+                     </label>
                      <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
             break;
         case "Operation":
             html += `<label>Operation: <input type="text" name="title" value="${values.title || ''}" required></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>
-                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>`;
+                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
+                     <label>Chirurg: <input type="text" name="surgeon" value="${values.surgeon || ''}"></label>
+                     <label>Krankenhaus: <input type="text" name="hospital" value="${values.hospital || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
             break;
         case "Befund":
             html += `<label>Befund: <input type="text" name="title" value="${values.title || ''}" required></label>
@@ -420,6 +445,19 @@ function renderMedicalEntryFields(type, values = {}) {
                      <label>Wert: <input type="text" name="value" value="${values.value || ''}" required></label>
                      <label>Einheit: <input type="text" name="unit" value="${values.unit || ''}"></label>
                      <label>Referenzbereich: <input type="text" name="reference" value="${values.reference || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Vitalwert":
+            html += `<label>Vitalwert: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Wert: <input type="text" name="value" value="${values.value || ''}" required></label>
+                     <label>Einheit: <input type="text" name="unit" value="${values.unit || ''}"></label>
+                     <label>Messmethode: <input type="text" name="method" value="${values.method || ''}"></label>
+                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
+            break;
+        case "Arztbesuch":
+            html += `<label>Arzt/Institution: <input type="text" name="title" value="${values.title || ''}" required></label>
+                     <label>Grund: <input type="text" name="reason" value="${values.reason || ''}"></label>
+                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
                      <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
             break;
         default: // Sonstiges
@@ -456,3 +494,61 @@ window.addEventListener('click', (event) => {
         medicalEntryModal.style.display = 'none';
     }
 });
+
+// Eintrag speichern
+if (medicalEntryForm) {
+    medicalEntryForm.onsubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(medicalEntryForm);
+        const entry = {};
+        for (const [key, value] of formData.entries()) {
+            entry[key] = value;
+        }
+        if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+        currentProfile.medicalRecord.push(entry);
+        showMedicalRecord();
+        medicalEntryModal.style.display = 'none';
+        saveBtn.disabled = false;
+    };
+}
+
+// Anzeige der medizinischen Akte mit Icons und Uhrzeit
+function showMedicalRecord() {
+    if (!currentProfile) {
+        medicalRecordSection.style.display = "none";
+        return;
+    }
+    medicalRecordSection.style.display = "block";
+    const entries = currentProfile.medicalRecord || [];
+    if (entries.length === 0) {
+        medicalRecordList.innerHTML = "<div style='color:#b2dfdb;text-align:center;'>Noch keine Einträge.</div>";
+        return;
+    }
+    medicalRecordList.innerHTML = entries.map(entry => `
+        <div class="medical-entry">
+            <div class="entry-header">
+                <span class="entry-type">${medicalTypeIcons[entry.type] || ''} ${entry.type || ''}</span>
+                <span class="entry-date">${entry.date || ''}${entry.time ? ' ' + entry.time : ''}</span>
+            </div>
+            <div class="entry-title">${entry.title || ''}</div>
+            ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
+            ${entry.dosage ? `<div class="entry-description"><b>Dosierung:</b> ${entry.dosage}</div>` : ''}
+            ${entry.frequency ? `<div class="entry-description"><b>Frequenz:</b> ${entry.frequency}</div>` : ''}
+            ${entry.icd ? `<div class="entry-description"><b>ICD-10:</b> ${entry.icd}</div>` : ''}
+            ${entry.batch ? `<div class="entry-description"><b>Charge:</b> ${entry.batch}</div>` : ''}
+            ${entry.manufacturer ? `<div class="entry-description"><b>Hersteller:</b> ${entry.manufacturer}</div>` : ''}
+            ${entry.location ? `<div class="entry-description"><b>Impfstelle:</b> ${entry.location}</div>` : ''}
+            ${entry.reaction ? `<div class="entry-description"><b>Reaktion:</b> ${entry.reaction}</div>` : ''}
+            ${entry.result ? `<div class="entry-description"><b>Ergebnis:</b> ${entry.result}</div>` : ''}
+            ${entry.severity ? `<div class="entry-description"><b>Schweregrad:</b> ${entry.severity}</div>` : ''}
+            ${entry.substance ? `<div class="entry-description"><b>Wirkstoff:</b> ${entry.substance}</div>` : ''}
+            ${entry.route ? `<div class="entry-description"><b>Verabreichungsweg:</b> ${entry.route}</div>` : ''}
+            ${entry.duration ? `<div class="entry-description"><b>Behandlungsdauer:</b> ${entry.duration}</div>` : ''}
+            ${entry.reason ? `<div class="entry-description"><b>Grund:</b> ${entry.reason}</div>` : ''}
+            ${entry.surgeon ? `<div class="entry-description"><b>Chirurg:</b> ${entry.surgeon}</div>` : ''}
+            ${entry.hospital ? `<div class="entry-description"><b>Krankenhaus:</b> ${entry.hospital}</div>` : ''}
+            ${entry.method ? `<div class="entry-description"><b>Messmethode:</b> ${entry.method}</div>` : ''}
+            <div class="entry-description">${entry.description || ''}</div>
+        </div>
+    `).join('');
+}
