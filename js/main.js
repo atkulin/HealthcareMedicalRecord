@@ -212,8 +212,10 @@ passwordForm.onsubmit = e => {
 };
 
 window.onclick = (event) => {
-    if (profileModal.style.display === 'flex' && event.target === profileModal) profileModal.style.display = 'none';
-    if (passwordModal.style.display === 'flex' && event.target === passwordModal) {
+    if (profileModal && profileModal.style.display === 'flex' && event.target === profileModal) {
+        profileModal.style.display = 'none';
+    }
+    if (passwordModal && passwordModal.style.display === 'flex' && event.target === passwordModal) {
         passwordModal.style.display = 'none';
         if (passwordResolve) passwordResolve(null);
     }
