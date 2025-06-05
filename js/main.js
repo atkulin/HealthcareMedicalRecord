@@ -154,12 +154,12 @@ function showProfileData() {
 
 // Medizinische Akte anzeigen
 function showMedicalRecord() {
-    if (!currentProfile || typeof currentProfile !== "object") {
+    if (!currentProfile || typeof currentProfile !== "object" || !Array.isArray(currentProfile.medicalRecord)) {
         medicalRecordSection.style.display = "none";
         return;
     }
     medicalRecordSection.style.display = "block";
-    const entries = currentProfile.medicalRecord || [];
+    const entries = currentProfile.medicalRecord;
     if (entries.length === 0) {
         medicalRecordList.innerHTML = "<div style='color:#b2dfdb;text-align:center;'>Noch keine Einträge.</div>";
         return;
@@ -328,9 +328,6 @@ function showMedicalRecord() {
     });
 }
 
-// Nach dem Laden/Erstellen eines Profils:
-if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
-
 // Hilfsfunktion: Untereinträge zu einer Diagnose anzeigen
 function renderDiagnosisSubentries(diagnoseEntry, diagnoseIdx) {
     const entries = currentProfile.medicalRecord || [];
@@ -373,6 +370,31 @@ function renderDiagnosisSubentries(diagnoseEntry, diagnoseIdx) {
     `).join('');
 }
 
+// Nach dem Laden eines Profils (z.B. nach Entschlüsseln)
+async function handleProfileLoad(decrypted) {
+    if (decrypted && typeof decrypted === "object") {
+        currentProfile = decrypted;
+        if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+        updateProfileUI();
+    }
+}
+
+// Passe das Laden an:
+if (loader) {
+    loader.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async evt => {
+            const password = await askPassword("Bitte Passwort zum Entschlüsseln des Profils eingeben:");
+            if (!password) return;
+            const decrypted = await decryptProfile(evt.target.result, password);
+            handleProfileLoad(decrypted);
+        };
+        reader.readAsText(file);
+    };
+}
+
 // Nach dem Absenden des Profil-Formulars (Erstellen oder Bearbeiten)
 if (profileForm) {
     profileForm.onsubmit = (e) => {
@@ -390,6 +412,13 @@ if (profileForm) {
 }
 
 function updateProfileUI() {
+    if (!currentProfile) {
+        profileStatus.textContent = "Kein Profil geladen";
+        saveBtn.disabled = true;
+        profileDataSection.style.display = "none";
+        medicalRecordSection.style.display = "none";
+        return;
+    }
     profileStatus.textContent = `Profil: ${currentProfile.vorname || currentProfile.name || 'Unbenannt'}`;
     saveBtn.disabled = false;
     showProfileData();
