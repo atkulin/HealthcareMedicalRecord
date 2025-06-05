@@ -667,7 +667,7 @@ function setMedicalEntryActionHandlers() {
 // Am Ende von renderMedicalEntryFields:
 html += `<label>Bild (optional): <input type="file" name="image" accept="image/*" id="medicalEntryImageInput"></label>`;
 medicalEntryDynamicFields.innerHTML = html;
-}
+
 
 // Profil speichern Button
 if (saveBtn) {
@@ -722,7 +722,6 @@ function renderMedicalEntryFields(type, values = {}) {
     html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}" required></label>`;
     html += `<label>Uhrzeit: <input type="time" name="time" value="${values.time || ''}" required></label>`;
     // ... (weitere Felder wie bisher, siehe vorherige Antworten) ...
-    // Am Ende:
     html += `<label>Bild (optional): <input type="file" name="image" accept="image/*" id="medicalEntryImageInput"></label>`;
     medicalEntryDynamicFields.innerHTML = html;
 }
