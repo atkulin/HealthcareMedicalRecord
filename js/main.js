@@ -233,6 +233,7 @@ function showMedicalRecord() {
         }
     });
     medicalRecordList.innerHTML = html;
+    setMedicalEntryActionHandlers();
 
     // Expand/Collapse für Diagnose-Gruppen
     document.querySelectorAll('.expand-toggle').forEach(toggle => {
@@ -562,8 +563,6 @@ if (addMedicalEntryBtn) {
         medicalEntryForm.reset();
         renderMedicalEntryFields('');
         medicalEntryModal.style.display = 'flex';
-
-        // Nur Standard-Submit-Handler setzen
         setMedicalEntryFormSubmitHandler();
     };
 }
@@ -572,7 +571,7 @@ if (addMedicalEntryBtn) {
 if (closeMedicalEntryModal) {
     closeMedicalEntryModal.onclick = () => {
         medicalEntryModal.style.display = 'none';
-        setMedicalEntryFormSubmitHandler(); // Reset auf Standard
+        setMedicalEntryFormSubmitHandler();
     };
 }
 
@@ -585,16 +584,13 @@ function setMedicalEntryFormSubmitHandler(editIdx = null) {
         for (const [key, value] of formData.entries()) {
             entry[key] = value;
         }
-
-        // Bild verarbeiten (optional)
+        // Bild verarbeiten
         const fileInput = document.getElementById('medicalEntryImageInput');
         if (fileInput && fileInput.files && fileInput.files[0]) {
             entry.image = await resizeAndReadImage(fileInput.files[0]);
         } else if (editIdx !== null && currentProfile.medicalRecord[editIdx].image) {
-            // Bild beim Bearbeiten beibehalten, wenn kein neues gewählt
             entry.image = currentProfile.medicalRecord[editIdx].image;
         }
-
         if (editIdx !== null) {
             entry.notes = currentProfile.medicalRecord[editIdx].notes || '';
             entry.parentDiagnosis = currentProfile.medicalRecord[editIdx].parentDiagnosis || undefined;
@@ -614,7 +610,6 @@ setMedicalEntryFormSubmitHandler(); // Initial setzen
 
 // Nach jedem Rendern der medizinischen Akte Buttons neu setzen!
 function setMedicalEntryActionHandlers() {
-    // Bearbeiten
     document.querySelectorAll('.edit-entry-btn').forEach(btn => {
         btn.onclick = () => {
             const idx = parseInt(btn.getAttribute('data-idx'));
@@ -627,7 +622,6 @@ function setMedicalEntryActionHandlers() {
             setMedicalEntryFormSubmitHandler(idx);
         };
     });
-    // Notiz
     document.querySelectorAll('.note-entry-btn').forEach(btn => {
         btn.onclick = () => {
             const idx = parseInt(btn.getAttribute('data-idx'));
@@ -640,7 +634,6 @@ function setMedicalEntryActionHandlers() {
             }
         };
     });
-    // Untereintrag
     document.querySelectorAll('.add-subentry-btn').forEach(btn => {
         btn.onclick = () => {
             const idx = parseInt(btn.getAttribute('data-idx'));
@@ -648,12 +641,16 @@ function setMedicalEntryActionHandlers() {
             medicalEntryForm.reset();
             renderMedicalEntryFields('', {});
             medicalEntryModal.style.display = 'flex';
-            medicalEntryForm.onsubmit = (e) => {
+            medicalEntryForm.onsubmit = async (e) => {
                 e.preventDefault();
                 const formData = new FormData(medicalEntryForm);
                 const subentry = {};
                 for (const [key, value] of formData.entries()) {
                     subentry[key] = value;
+                }
+                const fileInput = document.getElementById('medicalEntryImageInput');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    subentry.image = await resizeAndReadImage(fileInput.files[0]);
                 }
                 subentry.parentDiagnosis = idx;
                 if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
@@ -661,7 +658,7 @@ function setMedicalEntryActionHandlers() {
                 showMedicalRecord();
                 medicalEntryModal.style.display = 'none';
                 saveBtn.disabled = false;
-                setMedicalEntryFormSubmitHandler(); // Reset auf Standard
+                setMedicalEntryFormSubmitHandler();
             };
         };
     });
@@ -711,10 +708,21 @@ async function resizeAndReadImage(file, maxSize = 1024) {
                 canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
-                resolve(canvas.toDataURL('image/jpeg', 0.85)); // Komprimiert als JPEG
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
             };
             img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     });
+}
+
+// Medizinische Eintragsfelder rendern
+function renderMedicalEntryFields(type, values = {}) {
+    let html = '';
+    html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}" required></label>`;
+    html += `<label>Uhrzeit: <input type="time" name="time" value="${values.time || ''}" required></label>`;
+    // ... (weitere Felder wie bisher, siehe vorherige Antworten) ...
+    // Am Ende:
+    html += `<label>Bild (optional): <input type="file" name="image" accept="image/*" id="medicalEntryImageInput"></label>`;
+    medicalEntryDynamicFields.innerHTML = html;
 }
