@@ -42,23 +42,21 @@
             <div id="calendar"></div>
             <button class="calendar-nav" id="nextMonth" title="Nächster Monat">&#8594;</button>
         </div>
-        <div class="clock-container">
-            <span id="clock"></span>
+        <div class="clock-profile-container">
+            <div class="clock-container">
+                <span id="clock"></span>
+            </div>
+            <div class="profile-box" id="profileBox">
+                <span id="profileStatus">Kein Profil geladen</span>
+                <input type="file" id="profileLoader" accept=".json" style="display:none;">
+                <button id="loadProfileBtn" title="Profil laden">Profil laden</button>
+                <button id="saveProfileBtn" title="Profil speichern" disabled>Profil speichern</button>
+            </div>
         </div>
     </div>
     <h1>Healthcare Medical Record</h1>
     <p>Willkommen zu Ihrem persönlichen, sicheren medizinischen Datensatz.</p>
     <script src="js/calendar.js"></script>
-    <script>
-        // Uhr
-        function updateClock() {
-            const now = new Date();
-            const pad = n => n.toString().padStart(2, '0');
-            document.getElementById('clock').textContent =
-                pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
+    <script src="js/main.js"></script>
 </body>
 </html>
