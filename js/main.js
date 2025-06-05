@@ -164,11 +164,14 @@ function showMedicalRecord() {
         medicalRecordList.innerHTML = "<div style='color:#b2dfdb;text-align:center;'>Noch keine Einträge.</div>";
         return;
     }
-    medicalRecordList.innerHTML = entries.map(entry => `
+    medicalRecordList.innerHTML = entries.map((entry, idx) => `
         <div class="medical-entry">
             <div class="entry-header">
                 <span class="entry-type">${medicalTypeIcons[entry.type] || ''} ${entry.type || ''}</span>
                 <span class="entry-date">${entry.date || ''}${entry.time ? ' ' + entry.time : ''}</span>
+                <span style="flex:1"></span>
+                <button class="edit-entry-btn" title="Bearbeiten" data-idx="${idx}" style="margin-right:0.5em;">✏️</button>
+                <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${idx}">📝</button>
             </div>
             <div class="entry-title">${entry.title || ''}</div>
             ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
@@ -189,8 +192,52 @@ function showMedicalRecord() {
             ${entry.hospital ? `<div class="entry-description"><b>Krankenhaus:</b> ${entry.hospital}</div>` : ''}
             ${entry.method ? `<div class="entry-description"><b>Messmethode:</b> ${entry.method}</div>` : ''}
             <div class="entry-description">${entry.description || ''}</div>
+            ${entry.notes ? `<div class="entry-notes"><b>Notizen:</b> ${entry.notes}</div>` : ''}
         </div>
     `).join('');
+
+    // Editieren- und Notiz-Buttons aktivieren
+    document.querySelectorAll('.edit-entry-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            medicalEntryForm.reset();
+            medicalEntryType.value = entry.type;
+            renderMedicalEntryFields(entry.type, entry);
+            medicalEntryModal.style.display = 'flex';
+
+            // Temporärer Submit-Handler für Bearbeiten
+            const origSubmit = medicalEntryForm.onsubmit;
+            medicalEntryForm.onsubmit = (ev) => {
+                ev.preventDefault();
+                const formData = new FormData(medicalEntryForm);
+                const updated = {};
+                for (const [key, value] of formData.entries()) {
+                    updated[key] = value;
+                }
+                // Notizen erhalten
+                updated.notes = entry.notes || '';
+                currentProfile.medicalRecord[idx] = updated;
+                showMedicalRecord();
+                medicalEntryModal.style.display = 'none';
+                saveBtn.disabled = false;
+                medicalEntryForm.onsubmit = origSubmit;
+            };
+        };
+    });
+
+    document.querySelectorAll('.note-entry-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            const note = prompt("Notiz zu diesem Eintrag hinzufügen oder bearbeiten:", entry.notes || "");
+            if (note !== null) {
+                entry.notes = note;
+                showMedicalRecord();
+                saveBtn.disabled = false;
+            }
+        };
+    });
 }
 
 // UI aktualisieren
@@ -524,11 +571,14 @@ function showMedicalRecord() {
         medicalRecordList.innerHTML = "<div style='color:#b2dfdb;text-align:center;'>Noch keine Einträge.</div>";
         return;
     }
-    medicalRecordList.innerHTML = entries.map(entry => `
+    medicalRecordList.innerHTML = entries.map((entry, idx) => `
         <div class="medical-entry">
             <div class="entry-header">
                 <span class="entry-type">${medicalTypeIcons[entry.type] || ''} ${entry.type || ''}</span>
                 <span class="entry-date">${entry.date || ''}${entry.time ? ' ' + entry.time : ''}</span>
+                <span style="flex:1"></span>
+                <button class="edit-entry-btn" title="Bearbeiten" data-idx="${idx}" style="margin-right:0.5em;">✏️</button>
+                <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${idx}">📝</button>
             </div>
             <div class="entry-title">${entry.title || ''}</div>
             ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
@@ -549,6 +599,50 @@ function showMedicalRecord() {
             ${entry.hospital ? `<div class="entry-description"><b>Krankenhaus:</b> ${entry.hospital}</div>` : ''}
             ${entry.method ? `<div class="entry-description"><b>Messmethode:</b> ${entry.method}</div>` : ''}
             <div class="entry-description">${entry.description || ''}</div>
+            ${entry.notes ? `<div class="entry-notes"><b>Notizen:</b> ${entry.notes}</div>` : ''}
         </div>
     `).join('');
+
+    // Editieren- und Notiz-Buttons aktivieren
+    document.querySelectorAll('.edit-entry-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            medicalEntryForm.reset();
+            medicalEntryType.value = entry.type;
+            renderMedicalEntryFields(entry.type, entry);
+            medicalEntryModal.style.display = 'flex';
+
+            // Temporärer Submit-Handler für Bearbeiten
+            const origSubmit = medicalEntryForm.onsubmit;
+            medicalEntryForm.onsubmit = (ev) => {
+                ev.preventDefault();
+                const formData = new FormData(medicalEntryForm);
+                const updated = {};
+                for (const [key, value] of formData.entries()) {
+                    updated[key] = value;
+                }
+                // Notizen erhalten
+                updated.notes = entry.notes || '';
+                currentProfile.medicalRecord[idx] = updated;
+                showMedicalRecord();
+                medicalEntryModal.style.display = 'none';
+                saveBtn.disabled = false;
+                medicalEntryForm.onsubmit = origSubmit;
+            };
+        };
+    });
+
+    document.querySelectorAll('.note-entry-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            const note = prompt("Notiz zu diesem Eintrag hinzufügen oder bearbeiten:", entry.notes || "");
+            if (note !== null) {
+                entry.notes = note;
+                showMedicalRecord();
+                saveBtn.disabled = false;
+            }
+        };
+    });
 }

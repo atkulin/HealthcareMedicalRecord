@@ -471,3 +471,12 @@ a:hover {
     background: #1de9b6;
     color: #153c2e;
 }
+.entry-notes {
+    background: #184d47;
+    border-left: 3px solid #1de9b6;
+    margin-top: 0.5em;
+    padding: 0.5em 0.8em;
+    color: #ffe082;
+    font-size: 0.98em;
+    border-radius: 6px;
+}
