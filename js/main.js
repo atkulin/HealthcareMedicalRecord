@@ -386,6 +386,11 @@ if (loader) {
     loader.onchange = e => {
         const file = e.target.files[0];
         if (!file) return;
+        // Nur .medrec-Dateien zulassen
+        if (!file.name.endsWith('.medrec')) {
+            alert("Bitte eine gültige .medrec-Datei auswählen!");
+            return;
+        }
         const reader = new FileReader();
         reader.onload = async evt => {
             const password = await askPassword("Bitte Passwort zum Entschlüsseln des Profils eingeben:");
