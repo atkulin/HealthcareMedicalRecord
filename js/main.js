@@ -553,3 +553,266 @@ async function askPassword(promptText) {
         };
     });
 }
+
+// Handler für "Neuen Eintrag hinzufügen"
+if (addMedicalEntryBtn) {
+    addMedicalEntryBtn.onclick = () => {
+        isEditMode = false;
+        medicalEntryForm.reset();
+        renderMedicalEntryFields('');
+        medicalEntryModal.style.display = 'flex';
+
+        // Nur Standard-Submit-Handler setzen
+        setMedicalEntryFormSubmitHandler();
+    };
+}
+
+// Handler für Modal schließen (medizinischer Eintrag)
+if (closeMedicalEntryModal) {
+    closeMedicalEntryModal.onclick = () => {
+        medicalEntryModal.style.display = 'none';
+        setMedicalEntryFormSubmitHandler(); // Reset auf Standard
+    };
+}
+
+// Standard-Submit-Handler für neue medizinische Einträge
+function setMedicalEntryFormSubmitHandler(editIdx = null) {
+    medicalEntryForm.onsubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(medicalEntryForm);
+        const entry = {};
+        for (const [key, value] of formData.entries()) {
+            entry[key] = value;
+        }
+        if (editIdx !== null) {
+            // Bearbeiten
+            entry.notes = currentProfile.medicalRecord[editIdx].notes || '';
+            entry.parentDiagnosis = currentProfile.medicalRecord[editIdx].parentDiagnosis || undefined;
+            entry._expanded = currentProfile.medicalRecord[editIdx]._expanded;
+            currentProfile.medicalRecord[editIdx] = entry;
+        } else {
+            // Neu
+            if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+            currentProfile.medicalRecord.push(entry);
+        }
+        showMedicalRecord();
+        medicalEntryModal.style.display = 'none';
+        saveBtn.disabled = false;
+        setMedicalEntryFormSubmitHandler(); // Reset auf Standard
+    };
+}
+setMedicalEntryFormSubmitHandler(); // Initial setzen
+
+// Nach jedem Rendern der medizinischen Akte Buttons neu setzen!
+function setMedicalEntryActionHandlers() {
+    // Bearbeiten
+    document.querySelectorAll('.edit-entry-btn').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            isEditMode = true;
+            medicalEntryForm.reset();
+            medicalEntryType.value = entry.type;
+            renderMedicalEntryFields(entry.type, entry);
+            medicalEntryModal.style.display = 'flex';
+            setMedicalEntryFormSubmitHandler(idx);
+        };
+    });
+    // Notiz
+    document.querySelectorAll('.note-entry-btn').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            const note = prompt("Notiz zu diesem Eintrag hinzufügen oder bearbeiten:", entry.notes || "");
+            if (note !== null) {
+                entry.notes = note;
+                showMedicalRecord();
+                saveBtn.disabled = false;
+            }
+        };
+    });
+    // Untereintrag
+    document.querySelectorAll('.add-subentry-btn').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            isEditMode = false;
+            medicalEntryForm.reset();
+            renderMedicalEntryFields('', {});
+            medicalEntryModal.style.display = 'flex';
+            medicalEntryForm.onsubmit = (e) => {
+                e.preventDefault();
+                const formData = new FormData(medicalEntryForm);
+                const subentry = {};
+                for (const [key, value] of formData.entries()) {
+                    subentry[key] = value;
+                }
+                subentry.parentDiagnosis = idx;
+                if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+                currentProfile.medicalRecord.push(subentry);
+                showMedicalRecord();
+                medicalEntryModal.style.display = 'none';
+                saveBtn.disabled = false;
+                setMedicalEntryFormSubmitHandler(); // Reset auf Standard
+            };
+        };
+    });
+}
+
+// Am Ende von showMedicalRecord() aufrufen:
+function showMedicalRecord() {
+    if (!currentProfile || typeof currentProfile !== "object" || !Array.isArray(currentProfile.medicalRecord)) {
+        medicalRecordSection.style.display = "none";
+        return;
+    }
+    medicalRecordSection.style.display = "block";
+    const entries = currentProfile.medicalRecord;
+    if (entries.length === 0) {
+        medicalRecordList.innerHTML = "<div style='color:#b2dfdb;text-align:center;'>Noch keine Einträge.</div>";
+        return;
+    }
+
+    // Diagnose-Gruppen und andere Einträge trennen
+    let html = '';
+    entries.forEach((entry, idx) => {
+        if (entry.type === "Diagnose") {
+            // Diagnose als Gruppe mit expand/collapse
+            const groupId = `diagnose-group-${idx}`;
+            const expanded = entry._expanded !== false; // default: expanded
+            html += `
+                <div class="medical-entry diagnosis-group">
+                    <div class="entry-header diagnosis-header" data-group="${groupId}">
+                        <span class="expand-toggle" data-group="${groupId}" style="cursor:pointer;font-size:1.2em;">
+                            ${expanded ? "▼" : "►"}
+                        </span>
+                        <span class="entry-type">${medicalTypeIcons[entry.type] || ''} ${entry.type || ''}</span>
+                        <span class="entry-date">${entry.date || ''}${entry.time ? ' ' + entry.time : ''}</span>
+                        <span style="flex:1"></span>
+                        <button class="edit-entry-btn" title="Bearbeiten" data-idx="${idx}" style="margin-right:0.5em;">✏️</button>
+                        <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${idx}">📝</button>
+                    </div>
+                    <div class="diagnosis-group-content" id="${groupId}" style="display:${expanded ? 'block' : 'none'};">
+                        <div class="entry-title">${entry.title || ''}</div>
+                        ${entry.icd ? `<div class="entry-description"><b>ICD-10:</b> ${entry.icd}</div>` : ''}
+                        <div class="entry-description">${entry.description || ''}</div>
+                        ${entry.notes ? `<div class="entry-notes"><b>Notizen:</b> ${entry.notes}</div>` : ''}
+                        <div class="diagnosis-subentries">
+                            ${renderDiagnosisSubentries(entry, idx)}
+                            <button class="add-subentry-btn" data-idx="${idx}" style="margin-top:0.7em;">➕ Untereintrag hinzufügen</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (!entry.parentDiagnosis) {
+            // Normale Einträge (ohne parentDiagnosis)
+            html += `
+                <div class="medical-entry">
+                    <div class="entry-header">
+                        <span class="entry-type">${medicalTypeIcons[entry.type] || ''} ${entry.type || ''}</span>
+                        <span class="entry-date">${entry.date || ''}${entry.time ? ' ' + entry.time : ''}</span>
+                        <span style="flex:1"></span>
+                        <button class="edit-entry-btn" title="Bearbeiten" data-idx="${idx}" style="margin-right:0.5em;">✏️</button>
+                        <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${idx}">📝</button>
+                    </div>
+                    <div class="entry-title">${entry.title || ''}</div>
+                    ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
+                    ${entry.dosage ? `<div class="entry-description"><b>Dosierung:</b> ${entry.dosage}</div>` : ''}
+                    ${entry.frequency ? `<div class="entry-description"><b>Frequenz:</b> ${entry.frequency}</div>` : ''}
+                    ${entry.icd ? `<div class="entry-description"><b>ICD-10:</b> ${entry.icd}</div>` : ''}
+                    ${entry.batch ? `<div class="entry-description"><b>Charge:</b> ${entry.batch}</div>` : ''}
+                    ${entry.manufacturer ? `<div class="entry-description"><b>Hersteller:</b> ${entry.manufacturer}</div>` : ''}
+                    ${entry.location ? `<div class="entry-description"><b>Impfstelle:</b> ${entry.location}</div>` : ''}
+                    ${entry.reaction ? `<div class="entry-description"><b>Reaktion:</b> ${entry.reaction}</div>` : ''}
+                    ${entry.result ? `<div class="entry-description"><b>Ergebnis:</b> ${entry.result}</div>` : ''}
+                    ${entry.severity ? `<div class="entry-description"><b>Schweregrad:</b> ${entry.severity}</div>` : ''}
+                    ${entry.substance ? `<div class="entry-description"><b>Wirkstoff:</b> ${entry.substance}</div>` : ''}
+                    ${entry.route ? `<div class="entry-description"><b>Verabreichungsweg:</b> ${entry.route}</div>` : ''}
+                    ${entry.duration ? `<div class="entry-description"><b>Behandlungsdauer:</b> ${entry.duration}</div>` : ''}
+                    ${entry.reason ? `<div class="entry-description"><b>Grund:</b> ${entry.reason}</div>` : ''}
+                    ${entry.surgeon ? `<div class="entry-description"><b>Chirurg:</b> ${entry.surgeon}</div>` : ''}
+                    ${entry.hospital ? `<div class="entry-description"><b>Krankenhaus:</b> ${entry.hospital}</div>` : ''}
+                    ${entry.method ? `<div class="entry-description"><b>Messmethode:</b> ${entry.method}</div>` : ''}
+                    <div class="entry-description">${entry.description || ''}</div>
+                    ${entry.notes ? `<div class="entry-notes"><b>Notizen:</b> ${entry.notes}</div>` : ''}
+                </div>
+            `;
+        }
+    });
+    medicalRecordList.innerHTML = html;
+    setMedicalEntryActionHandlers(); // <--- HIER!
+
+    // Expand/Collapse für Diagnose-Gruppen
+    document.querySelectorAll('.expand-toggle').forEach(toggle => {
+        toggle.onclick = (e) => {
+            const groupId = toggle.getAttribute('data-group');
+            const groupDiv = document.getElementById(groupId);
+            const entryIdx = Array.from(document.querySelectorAll('.expand-toggle')).indexOf(toggle);
+            const entry = currentProfile.medicalRecord.filter(e => e.type === "Diagnose")[entryIdx];
+            if (groupDiv && entry) {
+                if (groupDiv.style.display === 'none') {
+                    groupDiv.style.display = 'block';
+                    toggle.textContent = "▼";
+                    entry._expanded = true;
+                } else {
+                    groupDiv.style.display = 'none';
+                    toggle.textContent = "►";
+                    entry._expanded = false;
+                }
+            }
+        };
+    });
+}
+
+// Nach jedem Rendern der medizinischen Akte Buttons neu setzen!
+function setMedicalEntryActionHandlers() {
+    // Bearbeiten
+    document.querySelectorAll('.edit-entry-btn').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            isEditMode = true;
+            medicalEntryForm.reset();
+            medicalEntryType.value = entry.type;
+            renderMedicalEntryFields(entry.type, entry);
+            medicalEntryModal.style.display = 'flex';
+            setMedicalEntryFormSubmitHandler(idx);
+        };
+    });
+    // Notiz
+    document.querySelectorAll('.note-entry-btn').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            const note = prompt("Notiz zu diesem Eintrag hinzufügen oder bearbeiten:", entry.notes || "");
+            if (note !== null) {
+                entry.notes = note;
+                showMedicalRecord();
+                saveBtn.disabled = false;
+            }
+        };
+    });
+    // Untereintrag
+    document.querySelectorAll('.add-subentry-btn').forEach(btn => {
+        btn.onclick = () => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            isEditMode = false;
+            medicalEntryForm.reset();
+            renderMedicalEntryFields('', {});
+            medicalEntryModal.style.display = 'flex';
+            medicalEntryForm.onsubmit = (e) => {
+                e.preventDefault();
+                const formData = new FormData(medicalEntryForm);
+                const subentry = {};
+                for (const [key, value] of formData.entries()) {
+                    subentry[key] = value;
+                }
+                subentry.parentDiagnosis = idx;
+                if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+                currentProfile.medicalRecord.push(subentry);
+                showMedicalRecord();
+                medicalEntryModal.style.display = 'none';
+                saveBtn.disabled = false;
+                setMedicalEntryFormSubmitHandler(); // Reset auf Standard
+            };
+        };
+    });
+}
