@@ -39,30 +39,96 @@ const profileModal = document.getElementById('profileModal');
 const closeProfileModal = document.getElementById('closeProfileModal');
 const profileForm = document.getElementById('profileForm');
 
+// Einfache AES-GCM Verschlüsselung/Entschlüsselung mit Web Crypto API (ohne Drittanbieter-Bibliotheken)
+async function encryptProfile(profileObj, password) {
+    const enc = new TextEncoder();
+    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const keyMaterial = await window.crypto.subtle.importKey(
+        "raw", enc.encode(password), {name: "PBKDF2"}, false, ["deriveKey"]
+    );
+    const key = await window.crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000,
+            hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt"]
+    );
+    const data = enc.encode(JSON.stringify(profileObj));
+    const ciphertext = new Uint8Array(await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv }, key, data
+    ));
+    // Datei enthält: salt + iv + ciphertext (alles base64)
+    return btoa(String.fromCharCode(...salt) + String.fromCharCode(...iv) + String.fromCharCode(...ciphertext));
+}
+
+async function decryptProfile(ciphertextB64, password) {
+    try {
+        const enc = new TextEncoder();
+        const dec = new TextDecoder();
+        const data = Uint8Array.from(atob(ciphertextB64), c => c.charCodeAt(0));
+        const salt = data.slice(0, 16);
+        const iv = data.slice(16, 28);
+        const ciphertext = data.slice(28);
+        const keyMaterial = await window.crypto.subtle.importKey(
+            "raw", enc.encode(password), {name: "PBKDF2"}, false, ["deriveKey"]
+        );
+        const key = await window.crypto.subtle.deriveKey(
+            {
+                name: "PBKDF2",
+                salt: salt,
+                iterations: 100000,
+                hash: "SHA-256"
+            },
+            keyMaterial,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["decrypt"]
+        );
+        const decrypted = await window.crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv }, key, ciphertext
+        );
+        return JSON.parse(dec.decode(decrypted));
+    } catch {
+        return null;
+    }
+}
+
 if (loadBtn && loader && saveBtn && profileStatus) {
     loadBtn.onclick = () => loader.click();
     loader.onchange = e => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = evt => {
-            try {
-                currentProfile = JSON.parse(evt.target.result);
-                profileStatus.textContent = `Profil: ${currentProfile.name || 'Unbenannt'}`;
+        reader.onload = async evt => {
+            const password = prompt("Bitte Passwort zum Entschlüsseln des Profils eingeben:");
+            if (!password) return;
+            const decrypted = await decryptProfile(evt.target.result, password);
+            if (decrypted) {
+                currentProfile = decrypted;
+                profileStatus.textContent = `Profil: ${currentProfile.vorname || currentProfile.name || 'Unbenannt'}`;
                 saveBtn.disabled = false;
-            } catch {
-                profileStatus.textContent = 'Fehler beim Laden!';
+            } else {
+                profileStatus.textContent = 'Fehler beim Entschlüsseln!';
             }
         };
         reader.readAsText(file);
     };
 
-    saveBtn.onclick = () => {
+    saveBtn.onclick = async () => {
         if (!currentProfile) return;
-        const blob = new Blob([JSON.stringify(currentProfile, null, 2)], {type: "application/json"});
+        const password = prompt("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
+        if (!password) return;
+        const encrypted = await encryptProfile(currentProfile, password);
+        const blob = new Blob([encrypted], {type: "text/plain"});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = (currentProfile.name || 'profil') + '.json';
+        a.download = ((currentProfile.vorname || currentProfile.name || 'profil') + '.json');
         a.click();
         URL.revokeObjectURL(a.href);
     };
