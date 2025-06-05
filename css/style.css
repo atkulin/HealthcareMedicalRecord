@@ -17,15 +17,128 @@
 
 body {
     font-family: Arial, Helvetica, sans-serif;
-    background-color: #184d47; /* dunkles beruhigendes Grün */
+    background-color: #184d47;
     color: #e8f5e9;
     margin: 0;
     padding: 0;
     min-height: 100vh;
 }
 
+.top-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 1.5rem 2rem 0 2rem;
+    gap: 2rem;
+}
+
+.calendar-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.calendar-nav {
+    background: #133c37;
+    color: #a5d6a7;
+    border: none;
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: background 0.2s;
+}
+.calendar-nav:hover {
+    background: #1e6b5a;
+}
+
+.clock-container {
+    margin-left: 2rem;
+    margin-top: 1.5rem;
+    font-size: 2rem;
+    font-family: 'Courier New', Courier, monospace;
+    color: #b2dfdb;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.dual-calendar {
+    display: flex;
+    gap: 2rem;
+}
+
+.calendar {
+    background: rgba(34, 73, 61, 0.95);
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(20, 40, 30, 0.18);
+    padding: 1rem 1.2rem 1.2rem 1.2rem;
+    min-width: 270px;
+}
+
+.calendar-title {
+    text-align: center;
+    color: #a5d6a7;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+}
+
+.calendar-row {
+    display: flex;
+}
+
+.calendar-header .calendar-cell {
+    font-weight: bold;
+    color: #81c784;
+    background: none;
+}
+
+.calendar-cell {
+    width: 2.2rem;
+    height: 2.2rem;
+    margin: 0.08rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #2e7d5a;
+    border-radius: 7px;
+    background: #184d47;
+    font-size: 1rem;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.calendar-cell.day:hover {
+    background: #276e54;
+    cursor: pointer;
+}
+
+.calendar-cell.today {
+    border: 2.5px solid #e53935;
+    color: #e53935;
+    font-weight: bold;
+    background: #184d47;
+}
+
+.calendar-cell.empty {
+    background: transparent;
+    border: none;
+}
+
+.weeknum-head, .weeknum {
+    background: #133c37;
+    color: #b2dfdb;
+    border-radius: 7px 0 0 7px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    width: 2.2rem;
+}
+
 h1 {
-    color: #81c784; /* sanftes Grün */
+    color: #81c784;
     text-align: center;
     margin-top: 2.5rem;
     letter-spacing: 1px;
