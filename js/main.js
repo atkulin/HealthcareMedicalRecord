@@ -177,7 +177,49 @@ if (createBtn && profileModal && closeProfileModal && profileForm) {
     };
 }
 
-// Nach Laden/Entschlüsseln anzeigen
+// Passwort-Modal-Logik
+const passwordModal = document.getElementById('passwordModal');
+const closePasswordModal = document.getElementById('closePasswordModal');
+const passwordForm = document.getElementById('passwordForm');
+const passwordInput = document.getElementById('passwordInput');
+const passwordModalTitle = document.getElementById('passwordModalTitle');
+const passwordError = document.getElementById('passwordError');
+
+let passwordResolve = null;
+let passwordPurpose = null;
+
+function askPassword(title) {
+    passwordModalTitle.textContent = title;
+    passwordInput.value = '';
+    passwordError.style.display = 'none';
+    passwordModal.style.display = 'flex';
+    passwordInput.focus();
+    return new Promise(resolve => {
+        passwordResolve = resolve;
+        passwordPurpose = title;
+    });
+}
+
+closePasswordModal.onclick = () => {
+    passwordModal.style.display = 'none';
+    if (passwordResolve) passwordResolve(null);
+};
+
+passwordForm.onsubmit = e => {
+    e.preventDefault();
+    passwordModal.style.display = 'none';
+    if (passwordResolve) passwordResolve(passwordInput.value);
+};
+
+window.onclick = (event) => {
+    if (profileModal.style.display === 'flex' && event.target === profileModal) profileModal.style.display = 'none';
+    if (passwordModal.style.display === 'flex' && event.target === passwordModal) {
+        passwordModal.style.display = 'none';
+        if (passwordResolve) passwordResolve(null);
+    }
+};
+
+// Profil laden/speichern mit Passwort-Modal
 if (loadBtn && loader && saveBtn && profileStatus) {
     loadBtn.onclick = () => loader.click();
     loader.onchange = e => {
@@ -185,7 +227,7 @@ if (loadBtn && loader && saveBtn && profileStatus) {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = async evt => {
-            const password = prompt("Bitte Passwort zum Entschlüsseln des Profils eingeben:");
+            const password = await askPassword("Bitte Passwort zum Entschlüsseln des Profils eingeben:");
             if (!password) return;
             const decrypted = await decryptProfile(evt.target.result, password);
             if (decrypted) {
@@ -201,7 +243,7 @@ if (loadBtn && loader && saveBtn && profileStatus) {
 
     saveBtn.onclick = async () => {
         if (!currentProfile) return;
-        const password = prompt("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
+        const password = await askPassword("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
         if (!password) return;
         const encrypted = await encryptProfile(currentProfile, password);
         const blob = new Blob([encrypted], {type: "text/plain"});
@@ -210,5 +252,18 @@ if (loadBtn && loader && saveBtn && profileStatus) {
         a.download = ((currentProfile.vorname || currentProfile.name || 'profil') + '.json');
         a.click();
         URL.revokeObjectURL(a.href);
+    };
+}
+
+// "Daten bearbeiten" Button: Modal korrekt öffnen
+if (editProfileBtn && profileForm && profileModal) {
+    editProfileBtn.onclick = (e) => {
+        e.stopPropagation();
+        for (const el of profileForm.elements) {
+            if (el.name && currentProfile[el.name] !== undefined) {
+                el.value = currentProfile[el.name];
+            }
+        }
+        profileModal.style.display = 'flex';
     };
 }

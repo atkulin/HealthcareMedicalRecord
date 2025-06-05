@@ -310,3 +310,15 @@ a:hover {
 .profile-data-section button:hover {
     background: #388e7c;
 }
+
+/* Ergänzung für Passwort-Modal in style.css */
+#passwordInput {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #388e7c;
+    background: #184d47;
+    color: #e8f5e9;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
