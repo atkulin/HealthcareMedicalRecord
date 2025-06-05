@@ -210,3 +210,67 @@ a:hover {
 .profile-box button:hover:enabled {
     background: #388e7c;
 }
+
+.modal {
+    display: flex;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(24, 77, 71, 0.85);
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: #225c4b;
+    padding: 2rem 2.5rem;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(20, 40, 30, 0.25);
+    color: #e8f5e9;
+    min-width: 320px;
+    max-width: 95vw;
+    position: relative;
+}
+.modal-content h2 {
+    margin-top: 0;
+    color: #81c784;
+    text-align: center;
+}
+.modal-content label {
+    display: block;
+    margin: 0.7rem 0 0.3rem 0;
+}
+.modal-content input, .modal-content select, .modal-content textarea {
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: 6px;
+    border: 1px solid #388e7c;
+    background: #184d47;
+    color: #e8f5e9;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+.modal-content textarea {
+    min-height: 60px;
+}
+.modal-content button[type="submit"] {
+    background: #1e6b5a;
+    color: #e8f5e9;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1.5rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.2s;
+}
+.modal-content button[type="submit"]:hover {
+    background: #388e7c;
+}
+.close {
+    position: absolute;
+    right: 1.2rem;
+    top: 1.2rem;
+    font-size: 2rem;
+    color: #b2dfdb;
+    cursor: pointer;
+}

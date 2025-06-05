@@ -34,6 +34,10 @@ const profileStatus = document.getElementById('profileStatus');
 const loadBtn = document.getElementById('loadProfileBtn');
 const saveBtn = document.getElementById('saveProfileBtn');
 const loader = document.getElementById('profileLoader');
+const createBtn = document.getElementById('createProfileBtn');
+const profileModal = document.getElementById('profileModal');
+const closeProfileModal = document.getElementById('closeProfileModal');
+const profileForm = document.getElementById('profileForm');
 
 if (loadBtn && loader && saveBtn && profileStatus) {
     loadBtn.onclick = () => loader.click();
@@ -61,5 +65,29 @@ if (loadBtn && loader && saveBtn && profileStatus) {
         a.download = (currentProfile.name || 'profil') + '.json';
         a.click();
         URL.revokeObjectURL(a.href);
+    };
+}
+
+if (createBtn && profileModal && closeProfileModal && profileForm) {
+    createBtn.onclick = () => {
+        profileForm.reset();
+        profileModal.style.display = 'flex';
+    };
+    closeProfileModal.onclick = () => {
+        profileModal.style.display = 'none';
+    };
+    window.onclick = (event) => {
+        if (event.target === profileModal) profileModal.style.display = 'none';
+    };
+    profileForm.onsubmit = (e) => {
+        e.preventDefault();
+        const formData = new FormData(profileForm);
+        currentProfile = {};
+        for (const [key, value] of formData.entries()) {
+            currentProfile[key] = value;
+        }
+        profileStatus.textContent = `Profil: ${currentProfile.vorname || ''} ${currentProfile.nachname || ''}`.trim() || 'Profil: Unbenannt';
+        saveBtn.disabled = false;
+        profileModal.style.display = 'none';
     };
 }
