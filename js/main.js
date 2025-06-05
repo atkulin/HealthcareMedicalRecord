@@ -664,11 +664,6 @@ function setMedicalEntryActionHandlers() {
     });
 }
 
-// Am Ende von renderMedicalEntryFields:
-html += `<label>Bild (optional): <input type="file" name="image" accept="image/*" id="medicalEntryImageInput"></label>`;
-medicalEntryDynamicFields.innerHTML = html;
-
-
 // Profil speichern Button
 if (saveBtn) {
     saveBtn.onclick = async () => {
