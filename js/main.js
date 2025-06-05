@@ -465,3 +465,10 @@ if (editProfileBtn) {
 if (closeProfileModal) {
     closeProfileModal.onclick = closeProfileModalFunc;
 }
+
+async function askPassword(promptText) {
+    return new Promise(resolve => {
+        const pw = window.prompt(promptText || "Bitte Passwort eingeben:");
+        resolve(pw);
+    });
+}
