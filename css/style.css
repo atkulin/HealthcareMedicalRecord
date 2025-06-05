@@ -523,3 +523,23 @@ a:hover {
     box-shadow: 0 2px 8px rgba(0,0,0,0.13);
     border: 1.5px solid #1de9b6;
 }
+
+#medicalEntryModal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    align-items: center;
+    justify-content: center;
+}
+#medicalEntryModal .modal-content {
+    background: #153c2e;
+    padding: 2em 1.5em 1.5em 1.5em;
+    border-radius: 12px;
+    max-width: 98vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    width: 420px;
+}
