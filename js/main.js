@@ -154,7 +154,7 @@ function showProfileData() {
 
 // Medizinische Akte anzeigen
 function showMedicalRecord() {
-    if (!currentProfile) {
+    if (!currentProfile || typeof currentProfile !== "object") {
         medicalRecordSection.style.display = "none";
         return;
     }
