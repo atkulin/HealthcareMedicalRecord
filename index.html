@@ -62,7 +62,33 @@
         <button id="editProfileBtn">Daten bearbeiten</button>
     </div>
     <p>Willkommen zu Ihrem persönlichen, sicheren medizinischen Datensatz.</p>
-    <!-- Ergänzung für Passwort-Modal in index.html -->
+    <!-- Profil-Erstellungs-/Bearbeitungs-Modal -->
+    <div id="profileModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" id="closeProfileModal">&times;</span>
+            <h2 id="profileModalTitle">Profil erstellen / bearbeiten</h2>
+            <form id="profileForm">
+                <label>Vorname: <input type="text" name="vorname"></label><br>
+                <label>Nachname: <input type="text" name="nachname"></label><br>
+                <label>Geburtsdatum: <input type="date" name="geburtsdatum"></label><br>
+                <label>Geschlecht: 
+                    <select name="geschlecht">
+                        <option value="">Bitte wählen</option>
+                        <option value="männlich">Männlich</option>
+                        <option value="weiblich">Weiblich</option>
+                        <option value="divers">Divers</option>
+                    </select>
+                </label><br>
+                <label>E-Mail: <input type="email" name="email"></label><br>
+                <label>Telefon: <input type="tel" name="telefon"></label><br>
+                <label>Adresse: <input type="text" name="adresse"></label><br>
+                <label>Notizen: <textarea name="notizen"></textarea></label><br>
+                <button type="submit">Profil speichern</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Passwort-Modal bleibt wie gehabt -->
     <div id="passwordModal" class="modal" style="display:none;">
         <div class="modal-content">
             <span class="close" id="closePasswordModal">&times;</span>
@@ -74,24 +100,7 @@
             <div id="passwordError" style="color:#e57373; margin-top:0.5rem; display:none;"></div>
         </div>
     </div>
-    <form id="profileForm">
-        <label>Vorname: <input type="text" name="vorname"></label><br>
-        <label>Nachname: <input type="text" name="nachname"></label><br>
-        <label>Geburtsdatum: <input type="date" name="geburtsdatum"></label><br>
-        <label>Geschlecht: 
-            <select name="geschlecht">
-                <option value="">Bitte wählen</option>
-                <option value="männlich">Männlich</option>
-                <option value="weiblich">Weiblich</option>
-                <option value="divers">Divers</option>
-            </select>
-        </label><br>
-        <label>E-Mail: <input type="email" name="email"></label><br>
-        <label>Telefon: <input type="tel" name="telefon"></label><br>
-        <label>Adresse: <input type="text" name="adresse"></label><br>
-        <label>Notizen: <textarea name="notizen"></textarea></label><br>
-        <button type="submit">Profil speichern</button>
-    </form>
+
     <!-- Am Ende der index.html, direkt vor </body> -->
     <script src="js/calendar.js"></script>
     <script src="js/main.js"></script>
