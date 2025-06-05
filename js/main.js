@@ -395,3 +395,10 @@ function updateProfileUI() {
     showProfileData();
     showMedicalRecord();
 }
+
+// Beispiel nach dem Laden eines Profils
+if (decrypted) {
+    currentProfile = decrypted;
+    if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+    updateProfileUI();
+}
