@@ -211,16 +211,6 @@ passwordForm.onsubmit = e => {
     if (passwordResolve) passwordResolve(passwordInput.value);
 };
 
-window.onclick = (event) => {
-    if (profileModal && profileModal.style.display === 'flex' && event.target === profileModal) {
-        profileModal.style.display = 'none';
-    }
-    if (passwordModal && passwordModal.style.display === 'flex' && event.target === passwordModal) {
-        passwordModal.style.display = 'none';
-        if (passwordResolve) passwordResolve(null);
-    }
-};
-
 // Profil laden/speichern mit Passwort-Modal
 if (loadBtn && loader && saveBtn && profileStatus) {
     loadBtn.onclick = () => loader.click();
@@ -257,10 +247,10 @@ if (loadBtn && loader && saveBtn && profileStatus) {
     };
 }
 
-// "Daten bearbeiten" Button: Modal korrekt öffnen
+// Nur EINEN Handler für "Daten bearbeiten"
 if (editProfileBtn && profileForm && profileModal) {
     editProfileBtn.onclick = (e) => {
-        e.stopPropagation();
+        // Fülle das Formular mit aktuellen Profildaten
         for (const el of profileForm.elements) {
             if (el.name && currentProfile[el.name] !== undefined) {
                 el.value = currentProfile[el.name];
@@ -269,3 +259,24 @@ if (editProfileBtn && profileForm && profileModal) {
         profileModal.style.display = 'flex';
     };
 }
+
+// window.onclick so anpassen, dass nur bei Klick außerhalb geschlossen wird
+window.onclick = (event) => {
+    // Profile-Modal schließen, nur wenn außerhalb geklickt
+    if (
+        profileModal &&
+        profileModal.style.display === 'flex' &&
+        event.target === profileModal
+    ) {
+        profileModal.style.display = 'none';
+    }
+    // Passwort-Modal schließen, nur wenn außerhalb geklickt
+    if (
+        passwordModal &&
+        passwordModal.style.display === 'flex' &&
+        event.target === passwordModal
+    ) {
+        passwordModal.style.display = 'none';
+        if (passwordResolve) passwordResolve(null);
+    }
+};
