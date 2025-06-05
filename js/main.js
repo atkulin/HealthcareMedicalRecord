@@ -227,6 +227,7 @@ function showMedicalRecord() {
                     ${entry.method ? `<div class="entry-description"><b>Messmethode:</b> ${entry.method}</div>` : ''}
                     <div class="entry-description">${entry.description || ''}</div>
                     ${entry.notes ? `<div class="entry-notes"><b>Notizen:</b> ${entry.notes}</div>` : ''}
+                    ${entry.image ? `<div class="entry-image"><img src="${entry.image}" alt="Bild" style="max-width:180px;max-height:180px;border-radius:8px;margin-top:0.5em;"></div>` : ''}
                 </div>
             `;
         }
@@ -686,4 +687,34 @@ if (saveBtn) {
         a.click();
         document.body.removeChild(a);
     };
+}
+
+async function resizeAndReadImage(file, maxSize = 1024) {
+    return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                let w = img.width;
+                let h = img.height;
+                if (w > maxSize || h > maxSize) {
+                    if (w > h) {
+                        h = Math.round(h * maxSize / w);
+                        w = maxSize;
+                    } else {
+                        w = Math.round(w * maxSize / h);
+                        h = maxSize;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', 0.85)); // Komprimiert als JPEG
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
 }

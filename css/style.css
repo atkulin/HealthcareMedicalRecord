@@ -517,3 +517,9 @@ a:hover {
     background: #1de9b6;
     color: #153c2e;
 }
+.entry-image img {
+    display: block;
+    margin: 0.5em 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+    border: 1.5px solid #1de9b6;
+}
