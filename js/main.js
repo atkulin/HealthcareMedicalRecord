@@ -585,6 +585,9 @@ function setMedicalEntryFormSubmitHandler(editIdx = null) {
         for (const [key, value] of formData.entries()) {
             entry[key] = value;
         }
+        // Typ immer setzen!
+        entry.type = medicalEntryType.value;
+
         // Bild verarbeiten
         const fileInput = document.getElementById('medicalEntryImageInput');
         if (fileInput && fileInput.files && fileInput.files[0]) {
