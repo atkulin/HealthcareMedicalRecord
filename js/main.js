@@ -833,42 +833,38 @@ function renderMedicalEntryFields(type, values = {}) {
 if (saveBtn) {
     saveBtn.onclick = async () => {
         if (!currentProfile) return;
-        // Entferne alle nicht-serialisierbaren Felder aus medicalRecord
-        if (currentProfile.medicalRecord) {
-            currentProfile.medicalRecord.forEach(entry => {
-                // Nur Strings im image-Feld erlauben
-                if (entry.image && typeof entry.image !== "string") {
-                    entry.image = undefined;
+
+        // Erzeuge eine komplett neue, saubere Kopie des Profils
+        function deepCleanProfile(profile) {
+            // Nur erlaubte Felder übernehmen
+            const allowedEntryKeys = [
+                "type", "date", "time", "title", "severity", "description", "icd", "result", "substance",
+                "dosage", "frequency", "route", "duration", "reason", "batch", "manufacturer", "location",
+                "reaction", "notes", "parentDiagnosis", "_expanded", "surgeon", "hospital", "method",
+                "value", "unit", "reference", "image"
+            ];
+            const clean = {};
+            for (const key in profile) {
+                if (key === "medicalRecord" && Array.isArray(profile.medicalRecord)) {
+                    clean.medicalRecord = profile.medicalRecord.map(entry => {
+                        const cleanedEntry = {};
+                        allowedEntryKeys.forEach(k => {
+                            if (entry[k] !== undefined) {
+                                // Nur Strings im image-Feld erlauben
+                                if (k === "image" && typeof entry[k] !== "string") return;
+                                cleanedEntry[k] = entry[k];
+                            }
+                        });
+                        return cleanedEntry;
+                    });
+                } else if (typeof profile[key] !== "object" && typeof profile[key] !== "function") {
+                    clean[key] = profile[key];
                 }
-                // Entferne alle Felder, die Objekte oder Funktionen sind (außer erlaubte)
-                Object.keys(entry).forEach(key => {
-                    if (
-                        typeof entry[key] === "object" &&
-                        key !== "image" &&
-                        key !== "parentDiagnosis" &&
-                        key !== "_expanded" &&
-                        entry[key] !== null
-                    ) {
-                        entry[key] = undefined;
-                    }
-                    if (typeof entry[key] === "function") {
-                        entry[key] = undefined;
-                    }
-                });
-            });
+            }
+            return clean;
         }
-        // Tiefe Kopie ohne Prototypen und zyklische Referenzen
-        function safeCopy(obj) {
-            const seen = new WeakSet();
-            return JSON.parse(JSON.stringify(obj, (key, value) => {
-                if (typeof value === "object" && value !== null) {
-                    if (seen.has(value)) return;
-                    seen.add(value);
-                }
-                return value;
-            }));
-        }
-        const safeProfile = safeCopy(currentProfile);
+
+        const safeProfile = deepCleanProfile(currentProfile);
 
         const password = await askPassword("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
         if (!password) return;
@@ -876,7 +872,7 @@ if (saveBtn) {
         const blob = new Blob([encrypted], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `${currentProfile.vorname || "profil"}.medrec`;
+        a.download = `${safeProfile.vorname || "profil"}.medrec`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
