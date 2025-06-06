@@ -688,19 +688,20 @@ function setMedicalEntryActionHandlers() {
     document.querySelectorAll('.image-entry-btn').forEach(btn => {
         btn.onclick = (e) => {
             const idx = parseInt(btn.getAttribute('data-idx'));
-            // Erstelle ein verstecktes File-Input
+            // Verstecktes File-Input erzeugen
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
             fileInput.accept = 'image/*';
             fileInput.style.display = 'none';
             document.body.appendChild(fileInput);
-            fileInput.onchange = async () => {
+
+            fileInput.onchange = () => {
                 if (fileInput.files && fileInput.files[0]) {
                     const reader = new FileReader();
                     reader.onload = (evt) => {
                         currentProfile.medicalRecord[idx].image = evt.target.result;
                         showMedicalRecord();
-                        saveBtn.disabled = false;
+                        saveBtn.disabled = false; // Profil speichern aktivieren!
                         document.body.removeChild(fileInput);
                     };
                     reader.readAsDataURL(fileInput.files[0]);
