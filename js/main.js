@@ -74,7 +74,7 @@ let currentProfile = null;
 let isEditMode = false;
 
 // AES-GCM Verschlüsselung/Entschlüsselung
-async function encryptProfile(profileObj, password) {
+async function encryptProfileString(profileString, password) {
     const enc = new TextEncoder();
     const salt = window.crypto.getRandomValues(new Uint8Array(16));
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
@@ -93,7 +93,7 @@ async function encryptProfile(profileObj, password) {
         false,
         ["encrypt"]
     );
-    const data = enc.encode(JSON.stringify(profileObj));
+    const data = enc.encode(profileString);
     const ciphertext = new Uint8Array(await window.crypto.subtle.encrypt(
         { name: "AES-GCM", iv: iv }, key, data
     ));
@@ -898,9 +898,9 @@ if (saveBtn) {
 
         const safeProfile = deepCleanProfile(currentProfile);
 
-        // Test: wirf Fehler, wenn immer noch zyklisch
+        let profileString;
         try {
-            JSON.stringify(safeProfile);
+            profileString = JSON.stringify(safeProfile);
         } catch (e) {
             alert("Fehler beim Speichern: Das Profil enthält nicht serialisierbare Daten.");
             return;
@@ -908,7 +908,7 @@ if (saveBtn) {
 
         const password = await askPassword("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
         if (!password) return;
-        const encrypted = await encryptProfile(safeProfile, password);
+        const encrypted = await encryptProfileString(profileString, password);
         const blob = new Blob([encrypted], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
