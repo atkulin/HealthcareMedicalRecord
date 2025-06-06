@@ -232,7 +232,8 @@ function showMedicalRecord() {
                 </div>
             `;
         }
-    });
+    }); // <--- Diese schließende Klammer MUSS hier hin!
+
     medicalRecordList.innerHTML = html;
     setMedicalEntryActionHandlers();
 
@@ -650,4 +651,94 @@ function setMedicalEntryActionHandlers() {
                 const fileInput = document.getElementById('medicalEntryImageInput');
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     updated.image = await resizeAndReadImage(fileInput.files[0]);
-                } else if
+                } else if (entry.image) {
+                    updated.image = entry.image;
+                }
+                updated.notes = entry.notes || '';
+                updated.parentDiagnosis = entry.parentDiagnosis || undefined;
+                updated._expanded = entry._expanded;
+                currentProfile.medicalRecord[idx] = updated;
+                showMedicalRecord();
+                medicalEntryModal.style.display = 'none';
+                saveBtn.disabled = false;
+                medicalEntryForm.onsubmit = origSubmit;
+            };
+        };
+    });
+
+    document.querySelectorAll('.note-entry-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            const entry = currentProfile.medicalRecord[idx];
+            const note = prompt("Notiz zu diesem Eintrag hinzufügen oder bearbeiten:", entry.notes || "");
+            if (note !== null) {
+                entry.notes = note;
+                showMedicalRecord();
+                saveBtn.disabled = false;
+            }
+        };
+    });
+
+    // Untereintrag hinzufügen
+    document.querySelectorAll('.add-subentry-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            medicalEntryForm.reset();
+            renderMedicalEntryFields('', {});
+            medicalEntryModal.style.display = 'flex';
+
+            // Temporärer Submit-Handler für Untereintrag
+            const origSubmit = medicalEntryForm.onsubmit;
+            medicalEntryForm.onsubmit = (ev) => {
+                ev.preventDefault();
+                const formData = new FormData(medicalEntryForm);
+                const subentry = {};
+                for (const [key, value] of formData.entries()) {
+                    subentry[key] = value;
+                }
+                subentry.parentDiagnosis = idx;
+                if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
+                currentProfile.medicalRecord.push(subentry);
+                showMedicalRecord();
+                medicalEntryModal.style.display = 'none';
+                saveBtn.disabled = false;
+                medicalEntryForm.onsubmit = origSubmit;
+            };
+        };
+    });
+}
+
+// Medizinische Eintragsfelder rendern
+function renderMedicalEntryFields(type, values = {}) {
+    let html = '';
+    html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}"></label>`;
+    html += `<label>Uhrzeit: <input type="time" name="time" value="${values.time || ''}"></label>`;
+    // ...weitere Felder je nach Typ...
+    medicalEntryDynamicFields.innerHTML = html;
+
+    // Bild-Vorschau setzen
+    const preview = document.getElementById('medicalEntryImagePreview');
+    if (preview) {
+        if (values.image) {
+            preview.innerHTML = `<img src="${values.image}" alt="Vorschau" style="max-width:140px;max-height:140px;border-radius:8px;">`;
+        } else {
+            preview.innerHTML = '';
+        }
+    }
+    // Event-Listener für Bild-Input
+    const fileInput = document.getElementById('medicalEntryImageInput');
+    if (fileInput && preview) {
+        fileInput.value = ""; // Reset
+        fileInput.onchange = () => {
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Vorschau" style="max-width:140px;max-height:140px;border-radius:8px;">`;
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                preview.innerHTML = '';
+            }
+        };
+    }
+}
