@@ -775,4 +775,11 @@ function renderMedicalEntryFields(type, values = {}) {
     }
 
     medicalEntryDynamicFields.innerHTML = html;
+
+    const typeSelect = document.getElementById('medicalEntryType');
+    if (typeSelect) {
+        typeSelect.onchange = () => {
+            renderMedicalEntryFields(typeSelect.value);
+        };
+    }
 }
