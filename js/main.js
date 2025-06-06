@@ -762,8 +762,8 @@ async function resizeAndReadImage(file, maxSize = 1024) {
 // Medizinische Eintragsfelder rendern
 function renderMedicalEntryFields(type, values = {}) {
     let html = '';
-    html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}" ></label>`;
-    html += `<label>Uhrzeit: <input type="time" name="time" value="${values.time || ''}" ></label>`;
+    html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}"></label>`;
+    html += `<label>Uhrzeit: <input type="time" name="time" value="${values.time || ''}"></label>`;
 
     switch (type) {
         case "Symptom":
@@ -857,7 +857,7 @@ function renderMedicalEntryFields(type, values = {}) {
     html += `<label>Bild (optional): <input type="file" name="image" accept="image/*" id="medicalEntryImageInput"></label>`;
     medicalEntryDynamicFields.innerHTML = html;
 
-    // Bild-Vorschau setzen
+    // Bild-Vorschau nur anzeigen, wenn Bild vorhanden
     const preview = document.getElementById('medicalEntryImagePreview');
     if (preview) {
         if (values.image) {
