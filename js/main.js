@@ -184,6 +184,7 @@ function showMedicalRecord() {
                         <button class="edit-entry-btn" title="Bearbeiten" data-idx="${idx}" style="margin-right:0.5em;">✏️</button>
                         <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${idx}">📝</button>
                         <button class="image-entry-btn" title="Bild hinzufügen" data-idx="${idx}" style="margin-left:0.5em;">📷</button>
+                        <button class="delete-entry-btn" title="Eintrag löschen" data-idx="${idx}" style="margin-left:0.5em;">🗑️</button>
                     </div>
                     <div class="diagnosis-group-content" id="${groupId}" style="display:${expanded ? 'block' : 'none'};">
                         <div class="entry-title">${entry.title || ''}</div>
@@ -208,6 +209,7 @@ function showMedicalRecord() {
                         <button class="edit-entry-btn" title="Bearbeiten" data-idx="${idx}" style="margin-right:0.5em;">✏️</button>
                         <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${idx}">📝</button>
                         <button class="image-entry-btn" title="Bild hinzufügen" data-idx="${idx}" style="margin-left:0.5em;">📷</button>
+                        <button class="delete-entry-btn" title="Eintrag löschen" data-idx="${idx}" style="margin-left:0.5em;">🗑️</button>
                     </div>
                     <div class="entry-title">${entry.title || ''}</div>
                     ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
@@ -352,6 +354,7 @@ function renderDiagnosisSubentries(diagnoseEntry, diagnoseIdx) {
                 <button class="edit-entry-btn" title="Bearbeiten" data-idx="${entry._idx}" style="margin-right:0.5em;">✏️</button>
                 <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${entry._idx}">📝</button>
                 <button class="image-entry-btn" title="Bild hinzufügen" data-idx="${entry._idx}" style="margin-left:0.5em;">📷</button>
+                <button class="delete-entry-btn" title="Eintrag löschen" data-idx="${entry._idx}" style="margin-left:0.5em;">🗑️</button>
             </div>
             <div class="entry-title">${entry.title || ''}</div>
             ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
@@ -721,6 +724,17 @@ function setMedicalEntryActionHandlers() {
             currentProfile.medicalRecord[idx].image = undefined;
             showMedicalRecord();
             saveBtn.disabled = false;
+        };
+    });
+
+    document.querySelectorAll('.delete-entry-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            if (confirm("Diesen Eintrag wirklich löschen?")) {
+                currentProfile.medicalRecord.splice(idx, 1);
+                showMedicalRecord();
+                saveBtn.disabled = false;
+            }
         };
     });
 }
