@@ -848,7 +848,7 @@ if (saveBtn) {
     saveBtn.onclick = async () => {
         if (!currentProfile) return;
 
-        // Erzeuge eine komplett neue, saubere Kopie des Profils (nur erlaubte Felder, keine Objekte, keine Funktionen)
+        // Nur erlaubte Felder für medicalRecord-Einträge
         const allowedEntryKeys = [
             "type", "date", "time", "title", "severity", "description", "icd", "result", "substance",
             "dosage", "frequency", "route", "duration", "reason", "batch", "manufacturer", "location",
@@ -856,28 +856,39 @@ if (saveBtn) {
             "value", "unit", "reference", "image"
         ];
 
+        // Hilfsfunktion: Nur primitive Werte und Strings im image-Feld
         function cleanMedicalRecord(record) {
             return record.map(entry => {
                 const cleaned = {};
                 allowedEntryKeys.forEach(k => {
                     if (entry[k] !== undefined) {
-                        // Nur Strings im image-Feld erlauben
-                        if (k === "image" && typeof entry[k] !== "string") return;
-                        cleaned[k] = entry[k];
+                        if (k === "image") {
+                            if (typeof entry[k] === "string") cleaned[k] = entry[k];
+                        } else if (
+                            typeof entry[k] === "string" ||
+                            typeof entry[k] === "number" ||
+                            typeof entry[k] === "boolean" ||
+                            entry[k] === null
+                        ) {
+                            cleaned[k] = entry[k];
+                        }
                     }
                 });
                 return cleaned;
             });
         }
 
+        // Hilfsfunktion: Nur primitive Werte im Profil
         function deepCleanProfile(profile) {
             const clean = {};
             for (const key in profile) {
                 if (key === "medicalRecord" && Array.isArray(profile.medicalRecord)) {
                     clean.medicalRecord = cleanMedicalRecord(profile.medicalRecord);
                 } else if (
-                    typeof profile[key] !== "object" &&
-                    typeof profile[key] !== "function"
+                    typeof profile[key] === "string" ||
+                    typeof profile[key] === "number" ||
+                    typeof profile[key] === "boolean" ||
+                    profile[key] === null
                 ) {
                     clean[key] = profile[key];
                 }
