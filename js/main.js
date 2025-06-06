@@ -833,6 +833,16 @@ function renderMedicalEntryFields(type, values = {}) {
 if (saveBtn) {
     saveBtn.onclick = async () => {
         if (!currentProfile) return;
+        // Zyklische Referenzen entfernen (parentDiagnosis ist nur Index, image ist nur String)
+        // Prüfe, ob alle Bilder Strings sind:
+        if (currentProfile.medicalRecord) {
+            currentProfile.medicalRecord.forEach(entry => {
+                if (entry.image && typeof entry.image !== "string") {
+                    entry.image = undefined;
+                }
+            });
+        }
+        // Jetzt speichern
         const password = await askPassword("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
         if (!password) return;
         const encrypted = await encryptProfile(currentProfile, password);
