@@ -183,6 +183,7 @@ function showMedicalRecord() {
                         <span style="flex:1"></span>
                         <button class="edit-entry-btn" title="Bearbeiten" data-idx="${idx}" style="margin-right:0.5em;">✏️</button>
                         <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${idx}">📝</button>
+                        <button class="image-entry-btn" title="Bild hinzufügen" data-idx="${idx}" style="margin-left:0.5em;">📷</button>
                     </div>
                     <div class="diagnosis-group-content" id="${groupId}" style="display:${expanded ? 'block' : 'none'};">
                         <div class="entry-title">${entry.title || ''}</div>
@@ -206,6 +207,7 @@ function showMedicalRecord() {
                         <span style="flex:1"></span>
                         <button class="edit-entry-btn" title="Bearbeiten" data-idx="${idx}" style="margin-right:0.5em;">✏️</button>
                         <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${idx}">📝</button>
+                        <button class="image-entry-btn" title="Bild hinzufügen" data-idx="${idx}" style="margin-left:0.5em;">📷</button>
                     </div>
                     <div class="entry-title">${entry.title || ''}</div>
                     ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
@@ -227,6 +229,10 @@ function showMedicalRecord() {
                     ${entry.method ? `<div class="entry-description"><b>Messmethode:</b> ${entry.method}</div>` : ''}
                     <div class="entry-description">${entry.description || ''}</div>
                     ${entry.notes ? `<div class="entry-notes"><b>Notizen:</b> ${entry.notes}</div>` : ''}
+                    ${entry.image ? `<div class="entry-image">
+    <img src="${entry.image}" alt="Bild" style="max-width:180px;max-height:180px;border-radius:8px;margin-top:0.5em;">
+    <button class="remove-image-btn" data-idx="${idx}" title="Bild entfernen" style="margin-left:0.5em;">🗑️</button>
+</div>` : ''}
                 </div>
             `;
         }
@@ -344,6 +350,7 @@ function renderDiagnosisSubentries(diagnoseEntry, diagnoseIdx) {
                 <span style="flex:1"></span>
                 <button class="edit-entry-btn" title="Bearbeiten" data-idx="${entry._idx}" style="margin-right:0.5em;">✏️</button>
                 <button class="note-entry-btn" title="Notiz hinzufügen" data-idx="${entry._idx}">📝</button>
+                <button class="image-entry-btn" title="Bild hinzufügen" data-idx="${entry._idx}" style="margin-left:0.5em;">📷</button>
             </div>
             <div class="entry-title">${entry.title || ''}</div>
             ${entry.value ? `<div class="entry-description"><b>Wert:</b> ${entry.value} ${entry.unit || ''} ${entry.reference ? '(Ref: ' + entry.reference + ')' : ''}</div>` : ''}
@@ -675,6 +682,42 @@ function setMedicalEntryActionHandlers() {
                 saveBtn.disabled = false;
                 medicalEntryForm.onsubmit = origSubmit;
             };
+        };
+    });
+
+    document.querySelectorAll('.image-entry-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            // Erstelle ein verstecktes File-Input
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+            fileInput.onchange = async () => {
+                if (fileInput.files && fileInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        currentProfile.medicalRecord[idx].image = evt.target.result;
+                        showMedicalRecord();
+                        saveBtn.disabled = false;
+                        document.body.removeChild(fileInput);
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    document.body.removeChild(fileInput);
+                }
+            };
+            fileInput.click();
+        };
+    });
+
+    document.querySelectorAll('.remove-image-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            const idx = parseInt(btn.getAttribute('data-idx'));
+            currentProfile.medicalRecord[idx].image = undefined;
+            showMedicalRecord();
+            saveBtn.disabled = false;
         };
     });
 }
