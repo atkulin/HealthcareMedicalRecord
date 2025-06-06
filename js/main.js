@@ -269,14 +269,23 @@ function showMedicalRecord() {
 
             // Temporärer Submit-Handler für Bearbeiten
             const origSubmit = medicalEntryForm.onsubmit;
-            medicalEntryForm.onsubmit = (ev) => {
+            medicalEntryForm.onsubmit = async (ev) => {
                 ev.preventDefault();
                 const formData = new FormData(medicalEntryForm);
                 const updated = {};
                 for (const [key, value] of formData.entries()) {
                     updated[key] = value;
                 }
-                // Notizen erhalten
+                // Typ immer setzen!
+                updated.type = medicalEntryType.value;
+                // Bild verarbeiten
+                const fileInput = document.getElementById('medicalEntryImageInput');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    updated.image = await resizeAndReadImage(fileInput.files[0]);
+                } else if (entry.image) {
+                    updated.image = entry.image;
+                }
+                // Notizen und Diagnose-Gruppen-Infos erhalten
                 updated.notes = entry.notes || '';
                 updated.parentDiagnosis = entry.parentDiagnosis || undefined;
                 updated._expanded = entry._expanded;
@@ -630,7 +639,35 @@ function setMedicalEntryActionHandlers() {
             medicalEntryType.value = entry.type;
             renderMedicalEntryFields(entry.type, entry);
             medicalEntryModal.style.display = 'flex';
-            setMedicalEntryFormSubmitHandler(idx);
+
+            // Temporärer Submit-Handler für Bearbeiten
+            const origSubmit = medicalEntryForm.onsubmit;
+            medicalEntryForm.onsubmit = async (ev) => {
+                ev.preventDefault();
+                const formData = new FormData(medicalEntryForm);
+                const updated = {};
+                for (const [key, value] of formData.entries()) {
+                    updated[key] = value;
+                }
+                // Typ immer setzen!
+                updated.type = medicalEntryType.value;
+                // Bild verarbeiten
+                const fileInput = document.getElementById('medicalEntryImageInput');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    updated.image = await resizeAndReadImage(fileInput.files[0]);
+                } else if (entry.image) {
+                    updated.image = entry.image;
+                }
+                // Notizen und Diagnose-Gruppen-Infos erhalten
+                updated.notes = entry.notes || '';
+                updated.parentDiagnosis = entry.parentDiagnosis || undefined;
+                updated._expanded = entry._expanded;
+                currentProfile.medicalRecord[idx] = updated;
+                showMedicalRecord();
+                medicalEntryModal.style.display = 'none';
+                saveBtn.disabled = false;
+                medicalEntryForm.onsubmit = origSubmit;
+            };
         };
     });
     document.querySelectorAll('.note-entry-btn').forEach(btn => {
