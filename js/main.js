@@ -827,3 +827,23 @@ function renderMedicalEntryFields(type, values = {}) {
         };
     }
 }
+
+if (saveBtn) {
+    saveBtn.onclick = async () => {
+        if (!currentProfile) return;
+        const password = await askPassword("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
+        if (!password) return;
+        const encrypted = await encryptProfile(currentProfile, password);
+        const blob = new Blob([encrypted], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `${currentProfile.vorname || "profil"}.medrec`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }, 100);
+        saveBtn.disabled = true;
+    };
+}
