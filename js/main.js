@@ -836,12 +836,19 @@ if (saveBtn) {
         // Entferne alle nicht-serialisierbaren Felder aus medicalRecord
         if (currentProfile.medicalRecord) {
             currentProfile.medicalRecord.forEach(entry => {
+                // Nur Strings im image-Feld erlauben
                 if (entry.image && typeof entry.image !== "string") {
                     entry.image = undefined;
                 }
-                // Entferne alle Felder, die Objekte oder Funktionen sind
+                // Entferne alle Felder, die Objekte oder Funktionen sind (außer erlaubte)
                 Object.keys(entry).forEach(key => {
-                    if (typeof entry[key] === "object" && key !== "image" && key !== "parentDiagnosis" && key !== "_expanded") {
+                    if (
+                        typeof entry[key] === "object" &&
+                        key !== "image" &&
+                        key !== "parentDiagnosis" &&
+                        key !== "_expanded" &&
+                        entry[key] !== null
+                    ) {
                         entry[key] = undefined;
                     }
                     if (typeof entry[key] === "function") {
@@ -850,10 +857,22 @@ if (saveBtn) {
                 });
             });
         }
-        // Jetzt speichern
+        // Tiefe Kopie ohne Prototypen und zyklische Referenzen
+        function safeCopy(obj) {
+            const seen = new WeakSet();
+            return JSON.parse(JSON.stringify(obj, (key, value) => {
+                if (typeof value === "object" && value !== null) {
+                    if (seen.has(value)) return;
+                    seen.add(value);
+                }
+                return value;
+            }));
+        }
+        const safeProfile = safeCopy(currentProfile);
+
         const password = await askPassword("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
         if (!password) return;
-        const encrypted = await encryptProfile(currentProfile, password);
+        const encrypted = await encryptProfile(safeProfile, password);
         const blob = new Blob([encrypted], { type: "text/plain" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
