@@ -834,30 +834,37 @@ if (saveBtn) {
     saveBtn.onclick = async () => {
         if (!currentProfile) return;
 
-        // Erzeuge eine komplett neue, saubere Kopie des Profils
+        // Erzeuge eine komplett neue, saubere Kopie des Profils (nur erlaubte Felder, keine Objekte, keine Funktionen)
+        const allowedEntryKeys = [
+            "type", "date", "time", "title", "severity", "description", "icd", "result", "substance",
+            "dosage", "frequency", "route", "duration", "reason", "batch", "manufacturer", "location",
+            "reaction", "notes", "parentDiagnosis", "_expanded", "surgeon", "hospital", "method",
+            "value", "unit", "reference", "image"
+        ];
+
+        function cleanMedicalRecord(record) {
+            return record.map(entry => {
+                const cleaned = {};
+                allowedEntryKeys.forEach(k => {
+                    if (entry[k] !== undefined) {
+                        // Nur Strings im image-Feld erlauben
+                        if (k === "image" && typeof entry[k] !== "string") return;
+                        cleaned[k] = entry[k];
+                    }
+                });
+                return cleaned;
+            });
+        }
+
         function deepCleanProfile(profile) {
-            // Nur erlaubte Felder übernehmen
-            const allowedEntryKeys = [
-                "type", "date", "time", "title", "severity", "description", "icd", "result", "substance",
-                "dosage", "frequency", "route", "duration", "reason", "batch", "manufacturer", "location",
-                "reaction", "notes", "parentDiagnosis", "_expanded", "surgeon", "hospital", "method",
-                "value", "unit", "reference", "image"
-            ];
             const clean = {};
             for (const key in profile) {
                 if (key === "medicalRecord" && Array.isArray(profile.medicalRecord)) {
-                    clean.medicalRecord = profile.medicalRecord.map(entry => {
-                        const cleanedEntry = {};
-                        allowedEntryKeys.forEach(k => {
-                            if (entry[k] !== undefined) {
-                                // Nur Strings im image-Feld erlauben
-                                if (k === "image" && typeof entry[k] !== "string") return;
-                                cleanedEntry[k] = entry[k];
-                            }
-                        });
-                        return cleanedEntry;
-                    });
-                } else if (typeof profile[key] !== "object" && typeof profile[key] !== "function") {
+                    clean.medicalRecord = cleanMedicalRecord(profile.medicalRecord);
+                } else if (
+                    typeof profile[key] !== "object" &&
+                    typeof profile[key] !== "function"
+                ) {
                     clean[key] = profile[key];
                 }
             }
@@ -865,6 +872,14 @@ if (saveBtn) {
         }
 
         const safeProfile = deepCleanProfile(currentProfile);
+
+        // Test: wirf Fehler, wenn immer noch zyklisch
+        try {
+            JSON.stringify(safeProfile);
+        } catch (e) {
+            alert("Fehler beim Speichern: Das Profil enthält nicht serialisierbare Daten.");
+            return;
+        }
 
         const password = await askPassword("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
         if (!password) return;
