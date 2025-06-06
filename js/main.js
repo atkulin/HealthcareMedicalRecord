@@ -276,16 +276,13 @@ function showMedicalRecord() {
                 for (const [key, value] of formData.entries()) {
                     updated[key] = value;
                 }
-                // Typ immer setzen!
                 updated.type = medicalEntryType.value;
-                // Bild verarbeiten
                 const fileInput = document.getElementById('medicalEntryImageInput');
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     updated.image = await resizeAndReadImage(fileInput.files[0]);
                 } else if (entry.image) {
                     updated.image = entry.image;
                 }
-                // Notizen und Diagnose-Gruppen-Infos erhalten
                 updated.notes = entry.notes || '';
                 updated.parentDiagnosis = entry.parentDiagnosis || undefined;
                 updated._expanded = entry._expanded;
@@ -601,16 +598,16 @@ function setMedicalEntryFormSubmitHandler(editIdx = null) {
         for (const [key, value] of formData.entries()) {
             entry[key] = value;
         }
-        // Typ immer setzen!
         entry.type = medicalEntryType.value;
 
-        // Bild verarbeiten
+        // Bild-Handling
         const fileInput = document.getElementById('medicalEntryImageInput');
         if (fileInput && fileInput.files && fileInput.files[0]) {
             entry.image = await resizeAndReadImage(fileInput.files[0]);
         } else if (editIdx !== null && currentProfile.medicalRecord[editIdx].image) {
             entry.image = currentProfile.medicalRecord[editIdx].image;
         }
+
         if (editIdx !== null) {
             entry.notes = currentProfile.medicalRecord[editIdx].notes || '';
             entry.parentDiagnosis = currentProfile.medicalRecord[editIdx].parentDiagnosis || undefined;
@@ -649,242 +646,8 @@ function setMedicalEntryActionHandlers() {
                 for (const [key, value] of formData.entries()) {
                     updated[key] = value;
                 }
-                // Typ immer setzen!
                 updated.type = medicalEntryType.value;
-                // Bild verarbeiten
                 const fileInput = document.getElementById('medicalEntryImageInput');
                 if (fileInput && fileInput.files && fileInput.files[0]) {
                     updated.image = await resizeAndReadImage(fileInput.files[0]);
-                } else if (entry.image) {
-                    updated.image = entry.image;
-                }
-                // Notizen und Diagnose-Gruppen-Infos erhalten
-                updated.notes = entry.notes || '';
-                updated.parentDiagnosis = entry.parentDiagnosis || undefined;
-                updated._expanded = entry._expanded;
-                currentProfile.medicalRecord[idx] = updated;
-                showMedicalRecord();
-                medicalEntryModal.style.display = 'none';
-                saveBtn.disabled = false;
-                medicalEntryForm.onsubmit = origSubmit;
-            };
-        };
-    });
-    document.querySelectorAll('.note-entry-btn').forEach(btn => {
-        btn.onclick = () => {
-            const idx = parseInt(btn.getAttribute('data-idx'));
-            const entry = currentProfile.medicalRecord[idx];
-            const note = prompt("Notiz zu diesem Eintrag hinzufügen oder bearbeiten:", entry.notes || "");
-            if (note !== null) {
-                entry.notes = note;
-                showMedicalRecord();
-                saveBtn.disabled = false;
-            }
-        };
-    });
-    document.querySelectorAll('.add-subentry-btn').forEach(btn => {
-        btn.onclick = () => {
-            const idx = parseInt(btn.getAttribute('data-idx'));
-            isEditMode = false;
-            medicalEntryForm.reset();
-            renderMedicalEntryFields('', {});
-            medicalEntryModal.style.display = 'flex';
-            medicalEntryForm.onsubmit = async (e) => {
-                e.preventDefault();
-                const formData = new FormData(medicalEntryForm);
-                const subentry = {};
-                for (const [key, value] of formData.entries()) {
-                    subentry[key] = value;
-                }
-                const fileInput = document.getElementById('medicalEntryImageInput');
-                if (fileInput && fileInput.files && fileInput.files[0]) {
-                    subentry.image = await resizeAndReadImage(fileInput.files[0]);
-                }
-                subentry.parentDiagnosis = idx;
-                if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
-                currentProfile.medicalRecord.push(subentry);
-                showMedicalRecord();
-                medicalEntryModal.style.display = 'none';
-                saveBtn.disabled = false;
-                setMedicalEntryFormSubmitHandler();
-            };
-        };
-    });
-}
-
-// Profil speichern Button
-if (saveBtn) {
-    saveBtn.onclick = async () => {
-        if (!currentProfile) return;
-        const password = await askPassword("Bitte Passwort zum Verschlüsseln des Profils eingeben:");
-        if (!password) return;
-        const encrypted = await encryptProfile(currentProfile, password);
-        const blob = new Blob([encrypted], {type: "text/plain"});
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = (currentProfile.vorname || "profil") + ".medrec";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    };
-}
-
-async function resizeAndReadImage(file, maxSize = 1024) {
-    return new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const img = new Image();
-            img.onload = function () {
-                let w = img.width;
-                let h = img.height;
-                if (w > maxSize || h > maxSize) {
-                    if (w > h) {
-                        h = Math.round(h * maxSize / w);
-                        w = maxSize;
-                    } else {
-                        w = Math.round(w * maxSize / h);
-                        h = maxSize;
-                    }
-                }
-                const canvas = document.createElement('canvas');
-                canvas.width = w;
-                canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                resolve(canvas.toDataURL('image/jpeg', 0.85));
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
-}
-
-// Medizinische Eintragsfelder rendern
-function renderMedicalEntryFields(type, values = {}) {
-    let html = '';
-    html += `<label>Datum: <input type="date" name="date" value="${values.date || ''}"></label>`;
-    html += `<label>Uhrzeit: <input type="time" name="time" value="${values.time || ''}"></label>`;
-
-    switch (type) {
-        case "Symptom":
-            html += `<label>Symptom: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Schweregrad: 
-                        <select name="severity">
-                            <option value="">Bitte wählen</option>
-                            <option${values.severity==="leicht"?" selected":""}>leicht</option>
-                            <option${values.severity==="mittel"?" selected":""}>mittel</option>
-                            <option${values.severity==="schwer"?" selected":""}>schwer</option>
-                        </select>
-                     </label>
-                     <label>Beschreibung: <textarea name="description" >${values.description || ''}</textarea></label>`;
-            break;
-        case "Diagnose":
-            html += `<label>Diagnose: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>ICD-10 Code: <input type="text" name="icd" value="${values.icd || ''}"></label>
-                     <label>Beschreibung: <textarea name="description" >${values.description || ''}</textarea></label>`;
-            break;
-        case "Untersuchung":
-            html += `<label>Untersuchung: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
-                     <label>Beschreibung: <textarea name="description" >${values.description || ''}</textarea></label>`;
-            break;
-        case "Medikation":
-            html += `<label>Medikament: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Wirkstoff: <input type="text" name="substance" value="${values.substance || ''}"></label>
-                     <label>Dosierung: <input type="text" name="dosage" value="${values.dosage || ''}" ></label>
-                     <label>Frequenz: <input type="text" name="frequency" value="${values.frequency || ''}" ></label>
-                     <label>Verabreichungsweg: <input type="text" name="route" value="${values.route || ''}"></label>
-                     <label>Behandlungsdauer: <input type="text" name="duration" value="${values.duration || ''}"></label>
-                     <label>Grund: <input type="text" name="reason" value="${values.reason || ''}"></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-            break;
-        case "Impfung":
-            html += `<label>Impfstoff: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Charge: <input type="text" name="batch" value="${values.batch || ''}"></label>
-                     <label>Hersteller: <input type="text" name="manufacturer" value="${values.manufacturer || ''}"></label>
-                     <label>Impfstelle: <input type="text" name="location" value="${values.location || ''}"></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-            break;
-        case "Allergie":
-            html += `<label>Allergen: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Reaktion: <input type="text" name="reaction" value="${values.reaction || ''}"></label>
-                     <label>Schweregrad: 
-                        <select name="severity">
-                            <option value="">Bitte wählen</option>
-                            <option${values.severity==="leicht"?" selected":""}>leicht</option>
-                            <option${values.severity==="mittel"?" selected":""}>mittel</option>
-                            <option${values.severity==="schwer"?" selected":""}>schwer</option>
-                        </select>
-                     </label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-            break;
-        case "Operation":
-            html += `<label>Operation: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
-                     <label>Chirurg: <input type="text" name="surgeon" value="${values.surgeon || ''}"></label>
-                     <label>Krankenhaus: <input type="text" name="hospital" value="${values.hospital || ''}"></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-            break;
-        case "Befund":
-            html += `<label>Befund: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-            break;
-        case "Laborwert":
-            html += `<label>Laborwert: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Wert: <input type="text" name="value" value="${values.value || ''}" ></label>
-                     <label>Einheit: <input type="text" name="unit" value="${values.unit || ''}"></label>
-                     <label>Referenzbereich: <input type="text" name="reference" value="${values.reference || ''}"></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-            break;
-        case "Vitalwert":
-            html += `<label>Vitalwert: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Wert: <input type="text" name="value" value="${values.value || ''}" ></label>
-                     <label>Einheit: <input type="text" name="unit" value="${values.unit || ''}"></label>
-                     <label>Messmethode: <input type="text" name="method" value="${values.method || ''}"></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-            break;
-        case "Arztbesuch":
-            html += `<label>Arzt/Institution: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Grund: <input type="text" name="reason" value="${values.reason || ''}"></label>
-                     <label>Ergebnis: <input type="text" name="result" value="${values.result || ''}"></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-            break;
-        default: // Sonstiges
-            html += `<label>Titel: <input type="text" name="title" value="${values.title || ''}" ></label>
-                     <label>Beschreibung: <textarea name="description">${values.description || ''}</textarea></label>`;
-    }
-
-    html += `<label>Bild (optional): <input type="file" name="image" accept="image/*" id="medicalEntryImageInput"></label>`;
-    medicalEntryDynamicFields.innerHTML = html;
-
-    // Bild-Vorschau nur anzeigen, wenn Bild vorhanden
-    const preview = document.getElementById('medicalEntryImagePreview');
-    if (preview) {
-        if (values.image) {
-            preview.innerHTML = `<img src="${values.image}" alt="Vorschau" style="max-width:140px;max-height:140px;border-radius:8px;">`;
-        } else {
-            preview.innerHTML = '';
-        }
-    }
-    // Event-Listener für Bild-Input
-    const fileInput = document.getElementById('medicalEntryImageInput');
-    if (fileInput && preview) {
-        fileInput.onchange = () => {
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    preview.innerHTML = `<img src="${e.target.result}" alt="Vorschau" style="max-width:140px;max-height:140px;border-radius:8px;">`;
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                preview.innerHTML = '';
-            }
-        };
-    }
-}
-
-if (medicalEntryType) {
-    medicalEntryType.onchange = () => {
-        renderMedicalEntryFields(medicalEntryType.value);
-    };
-}
+                } else if
