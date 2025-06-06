@@ -833,13 +833,21 @@ function renderMedicalEntryFields(type, values = {}) {
 if (saveBtn) {
     saveBtn.onclick = async () => {
         if (!currentProfile) return;
-        // Zyklische Referenzen entfernen (parentDiagnosis ist nur Index, image ist nur String)
-        // Prüfe, ob alle Bilder Strings sind:
+        // Entferne alle nicht-serialisierbaren Felder aus medicalRecord
         if (currentProfile.medicalRecord) {
             currentProfile.medicalRecord.forEach(entry => {
                 if (entry.image && typeof entry.image !== "string") {
                     entry.image = undefined;
                 }
+                // Entferne alle Felder, die Objekte oder Funktionen sind
+                Object.keys(entry).forEach(key => {
+                    if (typeof entry[key] === "object" && key !== "image" && key !== "parentDiagnosis" && key !== "_expanded") {
+                        entry[key] = undefined;
+                    }
+                    if (typeof entry[key] === "function") {
+                        entry[key] = undefined;
+                    }
+                });
             });
         }
         // Jetzt speichern
