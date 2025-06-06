@@ -27,6 +27,14 @@ function calcAge(birthdate) {
     return age;
 }
 
+function uint8ToBase64(uint8) {
+    let binary = '';
+    for (let i = 0; i < uint8.length; i++) {
+        binary += String.fromCharCode(uint8[i]);
+    }
+    return btoa(binary);
+}
+
 // DOM-Elemente
 const profileStatus = document.getElementById('profileStatus');
 const loadBtn = document.getElementById('loadProfileBtn');
@@ -97,7 +105,12 @@ async function encryptProfileString(profileString, password) {
     const ciphertext = new Uint8Array(await window.crypto.subtle.encrypt(
         { name: "AES-GCM", iv: iv }, key, data
     ));
-    return btoa(String.fromCharCode(...salt) + String.fromCharCode(...iv) + String.fromCharCode(...ciphertext));
+    // Fix: Kein ...spread!
+    const all = new Uint8Array(salt.length + iv.length + ciphertext.length);
+    all.set(salt, 0);
+    all.set(iv, salt.length);
+    all.set(ciphertext, salt.length + iv.length);
+    return uint8ToBase64(all);
 }
 
 async function decryptProfile(ciphertextB64, password) {
