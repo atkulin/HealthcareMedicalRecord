@@ -321,7 +321,8 @@ function showMedicalRecord() {
                 for (const [key, value] of formData.entries()) {
                     subentry[key] = value;
                 }
-                subentry.parentDiagnosis = idx;
+                // Beim Hinzufügen eines Untereintrags:
+                subentry.parentDiagnosis = idx; // idx ist eine Zahl, KEIN Objekt!
                 if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
                 currentProfile.medicalRecord.push(subentry);
                 showMedicalRecord();
@@ -674,7 +675,8 @@ function setMedicalEntryActionHandlers() {
                 for (const [key, value] of formData.entries()) {
                     subentry[key] = value;
                 }
-                subentry.parentDiagnosis = idx;
+                // Beim Hinzufügen eines Untereintrags:
+                subentry.parentDiagnosis = idx; // idx ist eine Zahl, KEIN Objekt!
                 if (!currentProfile.medicalRecord) currentProfile.medicalRecord = [];
                 currentProfile.medicalRecord.push(subentry);
                 showMedicalRecord();
@@ -847,3 +849,5 @@ if (saveBtn) {
         saveBtn.disabled = true;
     };
 }
+
+console.log(JSON.stringify(currentProfile)); // Wenn hier der Fehler schon kommt, ist das Objekt zyklisch!
